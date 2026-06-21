@@ -10,6 +10,7 @@
     "**/*.config.mts"
   ],
   "ignoreDependencies": [
+    "@clerk/testing",
     "@prisma/adapter-pg",
     "@testing-library/cypress",
     "@vercel/functions",
