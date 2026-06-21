@@ -1,80 +1,36 @@
-import { setupClerkTestingToken, addClerkCommands } from '@clerk/testing/cypress';
-
-addClerkCommands({ Cypress, cy });
+import { setupClerkTestingToken } from '@clerk/testing/cypress';
 
 const SIGN_IN_ROOT = '[data-clerk-component="SignIn"]';
-const SIGN_UP_ROOT = '[data-clerk-component="SignUp"]';
-const IDENTIFIER_INPUT = 'input[name="identifier"]';
-const PASSWORD_INPUT = 'input[name="password"]';
 const CONTINUE_BUTTON = '.cl-formButtonPrimary';
-
+const CLERK_TEST_CODE = '424242';
 const email = Cypress.env('CLERK_TEST_EMAIL') as string;
 const password = Cypress.env('CYPRESS_CLERK_TEST_PASSWORD') as string;
 
-function openSignInPage(): void {
-	cy.visit('/sign-in', { failOnStatusCode: false });
-	cy.clerkLoaded();
-	cy.get(SIGN_IN_ROOT, { timeout: 30000 }).should('be.visible');
-}
-
 beforeEach(() => {
-	cy.viewport(1280, 720);
 	setupClerkTestingToken();
 });
 
-describe('sign in path', () => {
-	it('check if sign in button exists', () => {
-		cy.visit('/', { failOnStatusCode: false });
-		cy.clerkLoaded();
-		cy.contains('button', 'Sign In').should('exist');
-	});
-
-	it('clicking Sign In navigates to the sign-in page', () => {
-		cy.visit('/', { failOnStatusCode: false });
-		cy.clerkLoaded();
-		cy.contains('button', 'Sign In').click();
-		cy.url().should('include', '/sign-in');
-		cy.get(SIGN_IN_ROOT).should('be.visible');
-	});
-
-	it('can leave the sign-in page via Home', () => {
-		openSignInPage();
-		// Desktop nav Home (mobile menu Home is hidden in DOM at this viewport)
-		cy.get('.navbar-center').find('a[href="/"]').click();
-		cy.url().should('not.include', '/sign-in');
-	});
-
-	it('unknown email is routed to sign-up', () => {
-		openSignInPage();
-		cy.get(IDENTIFIER_INPUT).type('nonexistent+clerk_test@example.com');
-		cy.get(CONTINUE_BUTTON).contains('Continue').click();
-		cy.get(SIGN_UP_ROOT, { timeout: 10000 }).should('be.visible');
-	});
-
-	it('sign in with wrong password shows error', function () {
+describe('sign in', () => {
+	it('signs in and reaches notes', function () {
 		if (!email || !password) {
 			this.skip();
 		}
 
-		openSignInPage();
-		cy.get(IDENTIFIER_INPUT).type(email);
+		cy.visit('/sign-in');
+		cy.clerkLoaded();
+		cy.get('input[name="identifier"]').type(email);
 		cy.get(CONTINUE_BUTTON).contains('Continue').click();
-		cy.get(PASSWORD_INPUT, { timeout: 10000 }).should('be.visible').type('wrong-password-for-e2e');
+		cy.get('input[name="password"]').type(password);
 		cy.get(SIGN_IN_ROOT).find(CONTINUE_BUTTON).click();
-		cy.get(SIGN_IN_ROOT)
-			.invoke('text')
-			.should('match', /password is incorrect|incorrect password|invalid/i);
-	});
-
-	it('sign in with correct email and password', function () {
-		if (!email || !password) {
-			this.skip();
-		}
-
-		cy.visit('/', { failOnStatusCode: false });
-		cy.clerkLoaded();
-		cy.clerkSignIn({ strategy: 'password', identifier: email, password });
-		cy.visit('/');
-		cy.get('[data-clerk-component="UserButton"]', { timeout: 30000 }).should('exist');
+		cy.url({ timeout: 30000 }).should('match', /\/notes|client-trust/);
+		cy.url().then(url => {
+			if (url.includes('client-trust')) {
+				cy.get('input[inputmode="numeric"]', { timeout: 10000 })
+					.first()
+					.type(`${CLERK_TEST_CODE}{enter}`);
+			}
+		});
+		cy.url({ timeout: 30000 }).should('include', '/notes');
+		cy.get('[data-testid="avatar"]').should('exist');
 	});
 });

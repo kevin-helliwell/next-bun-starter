@@ -1,5 +1,6 @@
 import { defineConfig } from 'cypress';
 import { clerkSetup } from '@clerk/testing/cypress';
+import { ensureClerkTestUser } from './cypress/support/ensure-clerk-test-user';
 
 export default defineConfig({
 	e2e: {
@@ -8,11 +9,12 @@ export default defineConfig({
 		retries: 2,
 		env: {
 			CLERK_TEST_EMAIL: '',
-			CLERK_HOST: '',
 			CYPRESS_CLERK_TEST_PASSWORD: '',
 		},
-		setupNodeEvents(_on, config) {
-			return clerkSetup({ config });
+		async setupNodeEvents(_on, config) {
+			const updatedConfig = await clerkSetup({ config });
+			await ensureClerkTestUser(updatedConfig);
+			return updatedConfig;
 		},
 	},
 });

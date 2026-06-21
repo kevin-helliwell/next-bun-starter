@@ -13,12 +13,9 @@
 // https://on.cypress.io/configuration
 // ***********************************************************
 
-/// <reference path="../../node_modules/@testing-library/cypress/types/index.d.ts" />
-
 import '@testing-library/cypress/add-commands';
+import { addClerkCommands } from '@clerk/testing/cypress';
 
-// Import commands.js using ES2015 syntax:
 import './commands.js';
 
-// Alternatively you can use CommonJS syntax:
-// require('./commands')
+addClerkCommands({ Cypress, cy });
