@@ -3,6 +3,7 @@
   "ignorePatterns": [
     "**/*.test.{ts,tsx}",
     "**/*.cy.ts",
+    "cypress/**",
     "**/*.{js,jsx}",
     "prisma/**",
     "tests/**",

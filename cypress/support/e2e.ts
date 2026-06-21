@@ -15,6 +15,8 @@
 
 /// <reference path="../../node_modules/@testing-library/cypress/types/index.d.ts" />
 
+import '@testing-library/cypress/add-commands';
+
 // Import commands.js using ES2015 syntax:
 import './commands.js';
 
