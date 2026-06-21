@@ -97,6 +97,8 @@ Set `CLERK_TEST_EMAIL` in `cypress.env.json` locally (see `cypress.env.json.exam
 
 GitHub Actions secrets: `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`, `VERCEL_TOKEN`
 
+Optional for production migrations in CI: `DATABASE_URL` — Neon **main** branch connection string from the Neon Console (recommended if `vercel env run` cannot read Sensitive vars). Vercel still uses its own `DATABASE_URL` at deploy runtime.
+
 Workflow: `.github/workflows/deploy-production.yml`
 
 Set these in **Vercel → Project → Settings → Environment Variables → Production** (the workflow runs `vercel pull` for build settings; migrations use `vercel env run` because Neon/Marketplace `DATABASE_URL` is **Sensitive** and is not written to `.vercel/.env.production.local`):

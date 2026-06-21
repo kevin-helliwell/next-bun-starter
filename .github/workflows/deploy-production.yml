@@ -18,10 +18,32 @@ jobs:
       - name: Pull Vercel Environment Information
         run: bunx vercel@latest pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
 
-      - name: Verify production DATABASE_URL via Vercel
+      # Tracked .env.development points at local Docker Postgres. Vercel CLI and
+      # Prisma (dotenv) merge it over production vars, so migrations hit localhost.
+      - name: Remove dev env files for production CI
+        run: rm -f .env.development .env .env.local
+
+      - name: Verify production DATABASE_URL
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
+          assert_non_local_url() {
+            case "$1" in
+              *localhost*|*127.0.0.1*)
+                echo "::error::DATABASE_URL points at localhost ($1)."
+                echo "Use your Neon production connection string, not the local Docker URL from .env.development."
+                exit 1
+                ;;
+            esac
+          }
+
+          if [ -n "${DATABASE_URL:-}" ]; then
+            assert_non_local_url "$DATABASE_URL"
+            echo "Using DATABASE_URL from GitHub Actions secret."
+            exit 0
+          fi
+
           if [ ! -f .vercel/.env.production.local ]; then
             echo "::error::Missing .vercel/.env.production.local after vercel pull."
             exit 1
@@ -31,18 +53,32 @@ jobs:
           bunx vercel@latest env run --environment=production --token="$VERCEL_TOKEN" -- \
             sh -c 'if [ -z "${DATABASE_URL:-}" ]; then
               echo "::error::DATABASE_URL is not available for Vercel Production."
-              echo "In Vercel → Project → Settings → Environment Variables, confirm DATABASE_URL is enabled for Production."
-              echo "If Neon is connected, re-save the integration or add DATABASE_URL manually for Production."
+              echo "Add DATABASE_URL as a GitHub Actions secret (Neon main branch), or confirm it is enabled for Production in Vercel."
               exit 1
-            fi'
+            fi
+            case "$DATABASE_URL" in
+              *localhost*|*127.0.0.1*)
+                echo "::error::DATABASE_URL still points at localhost after removing dev env files."
+                echo "Add DATABASE_URL as a GitHub Actions secret with your Neon production connection string."
+                exit 1
+                ;;
+            esac'
 
       - name: Run Prisma Migrations
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
+          migrate() {
+            if [ -n "${DATABASE_URL:-}" ]; then
+              bunx prisma migrate deploy
+            else
+              bunx vercel@latest env run --environment=production --token="$VERCEL_TOKEN" -- \
+                bunx prisma migrate deploy
+            fi
+          }
           for attempt in 1 2 3 4 5; do
-            bunx vercel@latest env run --environment=production --token="$VERCEL_TOKEN" -- \
-              bunx prisma migrate deploy && exit 0
+            migrate && exit 0
             echo "Migration attempt ${attempt} failed; retrying in 10s..."
             sleep 10
           done

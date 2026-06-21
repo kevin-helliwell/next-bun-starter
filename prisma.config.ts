@@ -1,5 +1,8 @@
-import 'dotenv/config';
+import { config } from 'dotenv';
 import { defineConfig } from 'prisma/config';
+
+// Do not let .env files override DATABASE_URL already set by the shell (e.g. CI).
+config({ override: false });
 
 export default defineConfig({
 	schema: 'prisma/schema.prisma',
