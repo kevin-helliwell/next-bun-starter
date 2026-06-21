@@ -23,13 +23,13 @@ function MenuIcon() {
 }
 
 interface NavigationBarProps {
-	readonly navLinks: ReactNode;
+	readonly userId: string | null | undefined;
 	readonly authSection: ReactNode;
 }
 
-export function NavigationBar({ navLinks, authSection }: NavigationBarProps) {
+export function NavigationBar({ userId, authSection }: NavigationBarProps) {
 	return (
-		<div className="navbar bg-base-100 border-b border-base-300 px-4 min-h-16">
+		<div className="navbar bg-base-100/80 backdrop-blur-sm border-b border-base-300/60 px-4 min-h-14">
 			<div className="navbar-start gap-1">
 				<div className="dropdown min-[851px]:hidden">
 					<div
@@ -42,26 +42,40 @@ export function NavigationBar({ navLinks, authSection }: NavigationBarProps) {
 					</div>
 					<ul
 						tabIndex={0}
-						className="menu menu-sm dropdown-content mt-3 p-2 shadow-lg bg-white border border-base-300 rounded-box w-52 z-[100]"
+						className="menu menu-sm dropdown-content mt-3 p-2 shadow-sm bg-base-50 border border-base-300 rounded-box w-52 z-[100]"
 					>
-						{navLinks}
+						<NavigationLinks userId={userId} variant="menu" />
 					</ul>
 				</div>
 				<Logo />
 			</div>
 			<div className="navbar-center hidden min-[851px]:flex">
-				<ul className="menu menu-horizontal gap-1 px-1">{navLinks}</ul>
+				<ul className="menu menu-horizontal gap-1 px-1">
+					<NavigationLinks userId={userId} variant="tab" />
+				</ul>
 			</div>
 			<div className="navbar-end">{authSection}</div>
 		</div>
 	);
 }
 
-export function NavigationLinks({ userId }: { readonly userId: string | null | undefined }) {
+export function NavigationLinks({
+	userId,
+	variant,
+}: {
+	readonly userId: string | null | undefined;
+	readonly variant: 'tab' | 'menu';
+}) {
 	return (
 		<>
-			<NavLinkItem href="/">Home</NavLinkItem>
-			{userId ? <NavLinkItem href="/notes">Notes</NavLinkItem> : null}
+			<NavLinkItem href="/" variant={variant}>
+				Home
+			</NavLinkItem>
+			{userId ? (
+				<NavLinkItem href="/notes" variant={variant}>
+					Notes
+				</NavLinkItem>
+			) : null}
 		</>
 	);
 }

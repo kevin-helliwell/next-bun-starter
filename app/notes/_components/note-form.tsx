@@ -10,9 +10,14 @@ interface NoteFormProps {
 	readonly submitLabel: string;
 	readonly defaultTitle?: string;
 	readonly defaultContent?: string;
+	readonly showBackLink?: boolean;
 }
 
-const fieldClassName = 'input input-bordered w-full bg-white';
+const titleClassName =
+	'w-full text-3xl font-semibold tracking-tight border-0 border-b border-base-300/60 rounded-none px-0 py-2 bg-transparent focus:outline-none focus:border-primary/50 placeholder:text-base-content/30 transition-colors';
+
+const contentClassName =
+	'w-full min-h-[55vh] text-base leading-7 border-0 rounded-none px-0 py-4 bg-transparent resize-y focus:outline-none placeholder:text-base-content/30';
 
 export function NoteForm({
 	action,
@@ -20,20 +25,27 @@ export function NoteForm({
 	submitLabel,
 	defaultTitle = '',
 	defaultContent = '',
+	showBackLink = false,
 }: NoteFormProps) {
 	const [state, formAction, pending] = useActionState(action, initialState);
 
 	return (
-		<div className="card bg-white border border-base-300 shadow-sm max-w-xl">
-			<form action={formAction} className="card-body gap-5">
-				<label className="form-control w-full">
-					<div className="label py-0">
-						<span className="label-text font-medium">Title</span>
+		<div className="card bg-base-50 border border-base-300 shadow-sm rounded-box w-full">
+			<form action={formAction} className="card-body gap-6 p-6 md:p-8">
+				{showBackLink ? (
+					<div>
+						<Link href="/notes" className="link link-primary text-sm">
+							← Notes
+						</Link>
 					</div>
+				) : null}
+
+				<label className="form-control w-full">
+					<span className="sr-only">Title</span>
 					<input
 						name="title"
 						defaultValue={defaultTitle}
-						className={fieldClassName}
+						className={titleClassName}
 						placeholder="Note title"
 						required
 					/>
@@ -42,25 +54,23 @@ export function NoteForm({
 					) : null}
 				</label>
 
-				<label className="form-control w-full">
-					<div className="label py-0">
-						<span className="label-text font-medium">Content</span>
-					</div>
+				<label className="form-control w-full flex-1">
+					<span className="sr-only">Content</span>
 					<textarea
 						name="content"
 						defaultValue={defaultContent}
-						className="textarea textarea-bordered w-full min-h-40 bg-white"
-						placeholder="Write your note…"
+						className={contentClassName}
+						placeholder="Start writing…"
 					/>
 				</label>
 
 				{state.errors.form ? <p className="text-error text-sm">{state.errors.form}</p> : null}
 
-				<div className="card-actions justify-start gap-2 pt-2">
+				<div className="sticky bottom-0 flex gap-2 pt-4 border-t border-base-300/60 bg-base-50">
 					<button type="submit" className="btn btn-primary" disabled={pending}>
 						{pending ? 'Saving…' : submitLabel}
 					</button>
-					<Link href="/notes" className="btn btn-outline">
+					<Link href="/notes" className="btn btn-ghost" aria-disabled={pending}>
 						Cancel
 					</Link>
 				</div>

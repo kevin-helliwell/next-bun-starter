@@ -8,7 +8,7 @@ const Logo = () => {
 			data-testid="logo-link"
 			className="btn btn-link text-xl no-underline hover:no-underline px-2 normal-case"
 		>
-			<span className="text-primary font-outfit text-2xl">My App</span>
+			<span className="text-primary font-outfit text-xl font-semibold">My App</span>
 		</Link>
 	);
 };

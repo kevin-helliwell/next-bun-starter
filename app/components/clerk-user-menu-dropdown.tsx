@@ -29,13 +29,13 @@ export function ClerkUserMenuDropdown({
 				data-testid="avatar"
 				onClick={onToggle}
 			>
-				<div className="rounded-full w-12 hover:ring hover:ring-blue hover:ring-offset-base-100 hover:ring-offset-2">
+				<div className="rounded-full w-12 hover:ring hover:ring-primary hover:ring-offset-base-100 hover:ring-offset-2">
 					<Image alt="avatar" src={userImage} width={375} height={375} />
 				</div>
 			</button>
 
 			{isOpen ? (
-				<div className="absolute right-0 mt-2 z-[1000] card card-compact w-64 p-2 shadow-[0px_0px_15px_10px_rgba(0,0,0,0.1)] bg-gray-light text-gray-dark">
+				<div className="absolute right-0 mt-2 z-[1000] card card-compact w-64 p-2 shadow-sm border border-base-300 bg-base-50 text-base-content rounded-box">
 					<div className="card-body">
 						<h3 className="card-title">Hi {userName}!</h3>
 						<button

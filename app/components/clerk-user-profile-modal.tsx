@@ -22,7 +22,7 @@ export function ClerkUserProfileModal({ isOpen, onClose }: ClerkUserProfileModal
 			}}
 			role="presentation"
 		>
-			<div className="max-h-[90%] max-w-[90%] overflow-auto rounded-lg bg-white p-5 shadow-lg">
+			<div className="max-h-[90%] max-w-[90%] overflow-auto rounded-box bg-base-50 p-5 shadow-lg border border-base-300">
 				<UserProfile routing="hash" />
 				<button type="button" onClick={onClose} className="btn btn-sm btn-ghost mt-4">
 					Close

@@ -25,20 +25,29 @@ vi.mock('next/navigation', () => ({
 }));
 
 describe('NavLinkItem', () => {
-	it('renders correctly with given href and children', () => {
-		render(<NavLinkItem href="/test">Test Link</NavLinkItem>);
+	it('renders tab variant with active styles when pathname matches', () => {
+		render(<NavLinkItem href="/">Home</NavLinkItem>);
 
-		const listItem = screen.getByRole('listitem');
-		expect(listItem).toBeInTheDocument();
-		expect(screen.getByText('Test Link')).toBeInTheDocument();
-		expect(screen.getByRole('listitem')).toHaveClass('rounded-md');
-		expect(screen.getByRole('link')).toHaveClass('px-4', 'py-2');
+		expect(screen.getByText('Home')).toBeInTheDocument();
+		expect(screen.getByRole('link')).toHaveClass('text-primary', 'font-medium', 'border-primary');
+	});
+
+	it('renders menu variant with rounded hover styles', () => {
+		render(
+			<NavLinkItem href="/test" variant="menu">
+				Test Link
+			</NavLinkItem>,
+		);
+
+		expect(screen.getByRole('link')).toHaveClass('rounded-md', 'hover:bg-base-200');
 	});
 
 	it('calls handleClick and blurs active element if inside dropdown', () => {
 		render(
 			<div className="dropdown">
-				<NavLinkItem href="/test">Test Link</NavLinkItem>
+				<NavLinkItem href="/test" variant="menu">
+					Test Link
+				</NavLinkItem>
 			</div>,
 		);
 

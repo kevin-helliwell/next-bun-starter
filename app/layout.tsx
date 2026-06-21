@@ -36,7 +36,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
 					signInUrl="/sign-in"
 					signUpForceRedirectUrl="/notes"
 					appearance={{
-						variables: { colorPrimary: '#017bff', colorText: '#585858' },
+						variables: { colorPrimary: '#4F46E5' },
 					}}
 				>
 					<Navigation />

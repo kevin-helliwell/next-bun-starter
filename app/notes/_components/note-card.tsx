@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import type { FormEvent } from 'react';
+import { useRouter } from 'next/navigation';
+import type { FormEvent, MouseEvent } from 'react';
 
 interface NoteCardProps {
 	readonly id: string;
@@ -12,6 +13,7 @@ interface NoteCardProps {
 }
 
 export function NoteCard({ id, title, content, updatedAtLabel, deleteAction }: NoteCardProps) {
+	const router = useRouter();
 	const editHref = `/notes/${id}/edit`;
 
 	const handleDelete = (event: FormEvent<HTMLFormElement>) => {
@@ -20,24 +22,47 @@ export function NoteCard({ id, title, content, updatedAtLabel, deleteAction }: N
 		}
 	};
 
+	const handleCardClick = () => {
+		router.push(editHref);
+	};
+
+	const stopPropagation = (event: MouseEvent) => {
+		event.stopPropagation();
+	};
+
 	return (
-		<li className="card bg-white border border-base-300 shadow-sm hover:shadow-md transition-shadow">
-			<Link href={editHref} className="card-body block">
-				<h2 className="card-title text-lg">{title}</h2>
-				{content ? (
-					<p className="whitespace-pre-wrap line-clamp-2 text-base-content/80">{content}</p>
-				) : null}
-				<p className="text-sm text-base-content/60">Updated {updatedAtLabel}</p>
-			</Link>
-			<div className="card-actions justify-end px-6 pb-4">
-				<Link href={editHref} className="btn btn-ghost">
-					Edit
-				</Link>
-				<form action={deleteAction} onSubmit={handleDelete}>
-					<button type="submit" className="btn btn-error btn-outline">
-						Delete
-					</button>
-				</form>
+		<li
+			className="card bg-base-50 border border-base-300 shadow-sm rounded-box hover:shadow-md hover:-translate-y-px transition-all cursor-pointer"
+			onClick={handleCardClick}
+			onKeyDown={event => {
+				if (event.key === 'Enter' || event.key === ' ') {
+					event.preventDefault();
+					handleCardClick();
+				}
+			}}
+			role="link"
+			tabIndex={0}
+		>
+			<div className="card-body py-4 gap-2">
+				<div className="flex items-start justify-between gap-4">
+					<div className="min-w-0 flex-1">
+						<h2 className="font-medium text-base truncate">{title}</h2>
+						{content ? (
+							<p className="text-sm text-base-content/60 line-clamp-2 mt-1">{content}</p>
+						) : null}
+						<p className="text-xs text-base-content/50 mt-2">Updated {updatedAtLabel}</p>
+					</div>
+					<div className="flex shrink-0 gap-1" onClick={stopPropagation}>
+						<Link href={editHref} className="btn btn-ghost btn-sm">
+							Edit
+						</Link>
+						<form action={deleteAction} onSubmit={handleDelete}>
+							<button type="submit" className="btn btn-ghost btn-sm text-error hover:bg-error/10">
+								Delete
+							</button>
+						</form>
+					</div>
+				</div>
 			</div>
 		</li>
 	);

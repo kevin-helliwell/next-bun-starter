@@ -1,11 +1,17 @@
 import Link from 'next/link';
 import { auth } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
+import { PageContainer } from '@/app/components/page-container';
+import { PageHeader } from '@/app/components/page-header';
 import { NoteCard } from '@/app/notes/_components/note-card';
 import { deleteNote, getNotesForCurrentUser } from '@/app/server-actions/notes';
 
 function formatNoteDate(date: Date): string {
 	return new Intl.DateTimeFormat('en-US', { dateStyle: 'medium' }).format(date);
+}
+
+function noteCountLabel(count: number): string {
+	return count === 1 ? '1 note' : `${count} notes`;
 }
 
 export default async function NotesPage() {
@@ -17,27 +23,37 @@ export default async function NotesPage() {
 	const notes = await getNotesForCurrentUser();
 
 	return (
-		<div className="container mx-auto px-4 py-8 max-w-3xl">
-			<div className="flex items-center justify-between mb-6">
-				<h1 className="text-3xl font-bold">My Notes</h1>
-				<Link href="/notes/new" className="btn btn-primary">
-					New note
-				</Link>
-			</div>
+		<PageContainer>
+			<PageHeader
+				title="Notes"
+				description={notes.length > 0 ? noteCountLabel(notes.length) : undefined}
+				action={
+					<Link href="/notes/new" className="btn btn-primary">
+						New note
+					</Link>
+				}
+			/>
 
 			{notes.length === 0 ? (
-				<div className="card bg-white border border-base-300 shadow-sm">
-					<div className="card-body items-center text-center">
-						<p className="text-base-content/80">No notes yet.</p>
-						<div className="card-actions">
-							<Link href="/notes/new" className="btn btn-primary">
-								Create your first note
-							</Link>
+				<div className="card bg-base-50 border border-base-300 shadow-sm rounded-box max-w-md mx-auto text-center">
+					<div className="card-body items-center py-12">
+						<div
+							className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 mb-2"
+							aria-hidden="true"
+						>
+							<div className="h-6 w-5 rounded-sm border-2 border-primary/40" />
 						</div>
+						<h2 className="text-lg font-medium">No notes yet</h2>
+						<p className="text-base-content/60 text-sm mb-2">
+							Create your first note to start capturing ideas.
+						</p>
+						<Link href="/notes/new" className="btn btn-primary">
+							Create your first note
+						</Link>
 					</div>
 				</div>
 			) : (
-				<ul className="flex flex-col gap-6">
+				<ul className="flex flex-col gap-3">
 					{notes.map(note => (
 						<NoteCard
 							key={note.id.toString()}
@@ -50,6 +66,6 @@ export default async function NotesPage() {
 					))}
 				</ul>
 			)}
-		</div>
+		</PageContainer>
 	);
 }
