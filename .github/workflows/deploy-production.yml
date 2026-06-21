@@ -23,6 +23,26 @@ jobs:
       - name: Remove dev env files for production CI
         run: rm -f .env.development .env .env.local
 
+      # vercel build reads .vercel/.env.production.local, not the step env.
+      # GitHub DATABASE_URL must be written there; vercel pull leaves Sensitive values empty.
+      - name: Prepare production env for vercel build
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          if [ -z "${DATABASE_URL:-}" ]; then
+            echo "No DATABASE_URL GitHub secret; vercel build will use vercel env run or pulled Vercel vars."
+            exit 0
+          fi
+          env_file=".vercel/.env.production.local"
+          if [ ! -f "$env_file" ]; then
+            echo "::error::Missing $env_file after vercel pull."
+            exit 1
+          fi
+          grep -v '^DATABASE_URL=' "$env_file" > "${env_file}.tmp" || true
+          mv "${env_file}.tmp" "$env_file"
+          printf 'DATABASE_URL="%s"\n' "$DATABASE_URL" >> "$env_file"
+          echo "Wrote DATABASE_URL from GitHub Actions secret into $env_file for vercel build."
+
       - name: Verify production DATABASE_URL
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
@@ -89,6 +109,8 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
         run: |
+          # vercel build loads env from .vercel/ (see Prepare production env step).
+          # Without a GitHub secret, inject Sensitive vars via vercel env run.
           if [ -n "${DATABASE_URL:-}" ]; then
             bunx vercel@latest build --prod --token="$VERCEL_TOKEN"
           else
