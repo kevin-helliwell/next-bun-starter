@@ -80,13 +80,17 @@ bun run db:seed     # optional demo data
 
 ### GitHub Actions secrets (E2E)
 
+Add these under **Settings → Secrets and variables → Actions → New repository secret**:
+
 | Secret | Purpose |
 | --- | --- |
-| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY_TEST` | Clerk test publishable key |
-| `CLERK_SECRET_KEY_TEST` | Clerk test secret key |
-| `CYPRESS_CLERK_TEST_PASSWORD` | Test user password |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY_TEST` | Clerk **test** publishable key (`pk_test_…`) |
+| `CLERK_SECRET_KEY_TEST` | Clerk **test** secret key (`sk_test_…`) |
+| `CYPRESS_CLERK_TEST_PASSWORD` | Password for a Clerk test user |
 
-Set `CLERK_TEST_EMAIL` and `CLERK_HOST` in `cypress.env.json` locally (see `cypress.env.json.example`).
+Use keys from a Clerk **development** instance (same app as local `.env.local`). E2E fails if any secret is missing — the app returns HTTP 500 without Clerk keys.
+
+Set `CLERK_TEST_EMAIL` and `CLERK_HOST` in `cypress.env.json` locally (see `cypress.env.json.example`). The full sign-in test skips when those are unset; basic modal tests still run in CI.
 
 ### Vercel production
 
