@@ -10,9 +10,16 @@
 	name: 'app';
 	default: true;
 	color-scheme: light;
-	--color-primary: #017bff;
-	--color-secondary: #2cc582;
 	--color-base-100: #eff9ff;
+	--color-base-200: #dceefb;
+	--color-base-300: #b3d4f0;
+	--color-base-content: #1e293b;
+	--color-primary: #017bff;
+	--color-primary-content: #ffffff;
+	--color-secondary: #2cc582;
+	--color-secondary-content: #ffffff;
+	--color-error: #dc2626;
+	--color-error-content: #ffffff;
 }
 
 @theme {

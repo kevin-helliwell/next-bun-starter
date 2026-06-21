@@ -12,6 +12,8 @@ interface NoteFormProps {
 	readonly defaultContent?: string;
 }
 
+const fieldClassName = 'input input-bordered w-full bg-white';
+
 export function NoteForm({
 	action,
 	initialState,
@@ -22,34 +24,47 @@ export function NoteForm({
 	const [state, formAction, pending] = useActionState(action, initialState);
 
 	return (
-		<form action={formAction} className="flex flex-col gap-4 max-w-xl">
-			<label className="form-control">
-				<span className="label-text">Title</span>
-				<input name="title" defaultValue={defaultTitle} className="input input-bordered" required />
-				{state.errors.title ? (
-					<span className="text-error text-sm mt-1">{state.errors.title}</span>
-				) : null}
-			</label>
+		<div className="card bg-white border border-base-300 shadow-sm max-w-xl">
+			<form action={formAction} className="card-body gap-5">
+				<label className="form-control w-full">
+					<div className="label py-0">
+						<span className="label-text font-medium">Title</span>
+					</div>
+					<input
+						name="title"
+						defaultValue={defaultTitle}
+						className={fieldClassName}
+						placeholder="Note title"
+						required
+					/>
+					{state.errors.title ? (
+						<span className="text-error text-sm mt-1">{state.errors.title}</span>
+					) : null}
+				</label>
 
-			<label className="form-control">
-				<span className="label-text">Content</span>
-				<textarea
-					name="content"
-					defaultValue={defaultContent}
-					className="textarea textarea-bordered min-h-32"
-				/>
-			</label>
+				<label className="form-control w-full">
+					<div className="label py-0">
+						<span className="label-text font-medium">Content</span>
+					</div>
+					<textarea
+						name="content"
+						defaultValue={defaultContent}
+						className="textarea textarea-bordered w-full min-h-40 bg-white"
+						placeholder="Write your note…"
+					/>
+				</label>
 
-			{state.errors.form ? <p className="text-error text-sm">{state.errors.form}</p> : null}
+				{state.errors.form ? <p className="text-error text-sm">{state.errors.form}</p> : null}
 
-			<div className="flex gap-2">
-				<button type="submit" className="btn btn-primary" disabled={pending}>
-					{pending ? 'Saving…' : submitLabel}
-				</button>
-				<Link href="/notes" className="btn btn-ghost">
-					Cancel
-				</Link>
-			</div>
-		</form>
+				<div className="card-actions justify-start gap-2 pt-2">
+					<button type="submit" className="btn btn-primary" disabled={pending}>
+						{pending ? 'Saving…' : submitLabel}
+					</button>
+					<Link href="/notes" className="btn btn-outline">
+						Cancel
+					</Link>
+				</div>
+			</form>
+		</div>
 	);
 }

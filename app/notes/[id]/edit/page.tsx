@@ -20,7 +20,12 @@ export default async function EditNotePage({ params }: EditNotePageProps) {
 
 	return (
 		<div className="container mx-auto px-4 py-8 max-w-3xl">
-			<h1 className="text-3xl font-bold mb-6">Edit note</h1>
+			<div className="flex items-center justify-between mb-6">
+				<h1 className="text-3xl font-bold">Edit note</h1>
+				<Link href="/notes" className="link link-primary text-sm">
+					Back to notes
+				</Link>
+			</div>
 			<NoteForm
 				action={boundUpdate}
 				initialState={emptyFormState}
@@ -28,9 +33,6 @@ export default async function EditNotePage({ params }: EditNotePageProps) {
 				defaultTitle={note.title}
 				defaultContent={note.content ?? ''}
 			/>
-			<Link href="/notes" className="btn btn-link mt-4 px-0">
-				Back to notes
-			</Link>
 		</div>
 	);
 }
