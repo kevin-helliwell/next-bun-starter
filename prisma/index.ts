@@ -1,7 +1,6 @@
 import 'dotenv/config';
 import { PrismaClient } from './generated/prisma-client-js/client';
 import { PrismaPg } from '@prisma/adapter-pg';
-import { Pool } from 'pg';
 
 // Create a global instance only for development environments, so that hot reloading re-uses a single instance
 // SOURCE: https://www.prisma.io/docs/guides/performance-and-optimization/connection-management#prevent-hot-reloading-from-creating-new-instances-of-prismaclient
@@ -13,7 +12,6 @@ import { Pool } from 'pg';
 const globalForPrisma = globalThis as unknown as {
 	prisma?: PrismaClient;
 	adapter?: PrismaPg;
-	pool?: Pool;
 };
 
 const connectionString = process.env.DATABASE_URL;
@@ -21,19 +19,9 @@ if (!connectionString) {
 	throw new Error('DATABASE_URL environment variable is not set');
 }
 
-// Create a single connection pool that can be reused
-const pool =
-	globalForPrisma.pool ??
-	new Pool({
-		connectionString,
-	});
-
-if (process.env.NODE_ENV !== 'production') {
-	globalForPrisma.pool = pool;
-}
-
-// Create adapter instance
-const adapter = globalForPrisma.adapter ?? new PrismaPg(pool);
+// Pass a config object — not a pg.Pool instance. @prisma/adapter-pg bundles its own pg copy,
+// so an external Pool fails instanceof and gets misread as config (pg Promise deprecation).
+const adapter = globalForPrisma.adapter ?? new PrismaPg({ connectionString });
 if (process.env.NODE_ENV !== 'production') {
 	globalForPrisma.adapter = adapter;
 }

@@ -1,7 +1,6 @@
 import 'dotenv/config';
 import { PrismaClient } from './generated/prisma-client-js/client';
 import { PrismaPg } from '@prisma/adapter-pg';
-import { Pool } from 'pg';
 
 /**
  * Creates a PrismaClient instance with PostgreSQL adapter.
@@ -13,7 +12,6 @@ export function createPrismaClient(): PrismaClient {
 		throw new Error('DATABASE_URL environment variable is not set');
 	}
 
-	const pool = new Pool({ connectionString });
-	const adapter = new PrismaPg(pool);
+	const adapter = new PrismaPg({ connectionString });
 	return new PrismaClient({ adapter });
 }
