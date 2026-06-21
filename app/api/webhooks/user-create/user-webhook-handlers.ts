@@ -37,7 +37,7 @@ async function handleUserCreated(
 	const newUser = await prisma.user.create({
 		data: {
 			name: userAttributes.first_name,
-			email: userAttributes.email_addresses[0]?.email_address ?? '',
+			email: getPrimaryEmail(userAttributes) ?? '',
 			clerk_id: clerkId,
 		},
 	});

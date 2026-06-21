@@ -13,6 +13,7 @@
     "test:e2e:run": "bunx cypress run",
     "test:e2e": "bunx cypress open",
     "lint": "eslint . --cache",
+    "typecheck": "tsc --noEmit",
     "pg:start": "docker compose -f compose.local.yml up",
     "pg:stop": "docker compose -f compose.local.yml down",
     "db:migrate:dev": "bunx prisma migrate dev",

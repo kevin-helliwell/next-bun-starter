@@ -52,7 +52,7 @@ export default defineConfig({
 		globals: true, // automatic imports for describe, it, expect, etc
 		coverage: {
 			provider: 'v8',
-			include: ['app/**/*', 'lib/**/*'],
+			include: ['app/**/*'],
 			exclude: ['**/*.test.{ts,tsx}'],
 		},
 	},

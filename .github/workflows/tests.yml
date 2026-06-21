@@ -64,6 +64,9 @@ jobs:
         env:
           NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY_TEST }}
 
+      - name: Typecheck
+        run: bunx tsc --noEmit
+
   e2e:
     # Skip e2e tests for Dependabot PRs since they don't have access to secrets
     if: github.actor != 'dependabot[bot]'
@@ -174,7 +177,7 @@ jobs:
 
       - name: Build and Start Next.js App
         run: |
-          bun run build
+          bun run vercel-build
           nohup bun run start &
         env:
           DATABASE_URL: 'postgres://postgres:postgres@localhost/db'

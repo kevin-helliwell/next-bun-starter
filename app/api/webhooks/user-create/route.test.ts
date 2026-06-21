@@ -91,6 +91,46 @@ describe('POST /api/webhooks/user-create', () => {
 		});
 	});
 
+	it('should use primary email on user create when primary id is set', async () => {
+		vi.stubEnv('WEBHOOK_SECRET', 'test');
+
+		const clerkPayload = {
+			type: 'user.created',
+			data: {
+				id: 'test_clerk_id',
+				email_addresses: [
+					{ id: 'email_1', email_address: 'secondary@example.com' },
+					{ id: 'email_2', email_address: 'primary@example.com' },
+				],
+				primary_email_address_id: 'email_2',
+				first_name: 'Test',
+			},
+		};
+
+		const mockCreatedUser = userFixture({
+			clerk_id: 'test_clerk_id',
+			email: 'primary@example.com',
+			name: 'Test',
+		});
+		vi.mocked(prisma.user.create).mockResolvedValue(mockCreatedUser);
+		mockVerify.mockResolvedValue(clerkPayload);
+
+		const request = new NextRequest('http://localhost', {
+			method: 'POST',
+			body: JSON.stringify(clerkPayload),
+		});
+		const response = await POST(request);
+
+		expect(response.status).toBe(200);
+		expect(prisma.user.create).toHaveBeenCalledWith({
+			data: {
+				name: 'Test',
+				email: 'primary@example.com',
+				clerk_id: 'test_clerk_id',
+			},
+		});
+	});
+
 	it('should update user email when changed', async () => {
 		// Arrange
 		vi.stubEnv('WEBHOOK_SECRET', 'test');

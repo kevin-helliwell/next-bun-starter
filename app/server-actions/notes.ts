@@ -2,19 +2,59 @@
 
 import { auth } from '@clerk/nextjs/server';
 import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { match } from 'ts-pattern';
 import * as v from 'valibot';
 import superjson from 'superjson';
 import { prisma } from '@/prisma';
 import { getOrCreateLocalUserId } from '@/app/lib/data';
+import type { NoteFormState } from '@/app/server-actions/notes-types';
 
 const noteSchema = v.object({
 	title: v.pipe(v.string(), v.minLength(1, 'Title is required')),
 	content: v.optional(v.string()),
 });
 
-import type { NoteFormState } from '@/app/server-actions/notes-types';
+type ParsedNote = {
+	readonly title: string;
+	readonly content: string | null;
+};
+
+function parseNoteFormData(
+	formData: FormData,
+):
+	| { readonly ok: true; readonly data: ParsedNote }
+	| { readonly ok: false; readonly state: NoteFormState } {
+	const parsed = v.safeParse(noteSchema, {
+		title: formData.get('title'),
+		content: formData.get('content') ?? undefined,
+	});
+
+	if (!parsed.success) {
+		return {
+			ok: false,
+			state: match(parsed.issues[0]?.path?.[0]?.key)
+				.with('title', () => ({ errors: { title: 'Title is required' } }))
+				.otherwise(() => ({ errors: { form: 'Invalid note data' } })),
+		};
+	}
+
+	return {
+		ok: true,
+		data: {
+			title: parsed.output.title,
+			content: parsed.output.content ?? null,
+		},
+	};
+}
+
+function parseNoteId(noteId: string): bigint | undefined {
+	if (!/^\d+$/.test(noteId)) {
+		return undefined;
+	}
+
+	return BigInt(noteId);
+}
 
 async function requireLocalUserId(): Promise<bigint> {
 	const { userId } = await auth();
@@ -34,23 +74,18 @@ export async function createNote(
 	_prevState: NoteFormState,
 	formData: FormData,
 ): Promise<NoteFormState> {
-	const parsed = v.safeParse(noteSchema, {
-		title: formData.get('title'),
-		content: formData.get('content') ?? undefined,
-	});
-
-	if (!parsed.success) {
-		return match(parsed.issues[0]?.path?.[0]?.key)
-			.with('title', () => ({ errors: { title: 'Title is required' } }))
-			.otherwise(() => ({ errors: { form: 'Invalid note data' } }));
+	const parsed = parseNoteFormData(formData);
+	if (!parsed.ok) {
+		return parsed.state;
 	}
 
+	const userId = await requireLocalUserId();
+
 	try {
-		const userId = await requireLocalUserId();
 		await prisma.note.create({
 			data: {
-				title: parsed.output.title,
-				content: parsed.output.content ?? null,
+				title: parsed.data.title,
+				content: parsed.data.content,
 				userId,
 			},
 		});
@@ -67,19 +102,21 @@ export async function updateNote(
 	_prevState: NoteFormState,
 	formData: FormData,
 ): Promise<NoteFormState> {
-	const parsed = v.safeParse(noteSchema, {
-		title: formData.get('title'),
-		content: formData.get('content') ?? undefined,
-	});
-
-	if (!parsed.success) {
-		return { errors: { title: 'Title is required' } };
+	const parsed = parseNoteFormData(formData);
+	if (!parsed.ok) {
+		return parsed.state;
 	}
 
+	const id = parseNoteId(noteId);
+	if (id === undefined) {
+		return { errors: { form: 'Note not found' } };
+	}
+
+	const userId = await requireLocalUserId();
+
 	try {
-		const userId = await requireLocalUserId();
 		const note = await prisma.note.findFirst({
-			where: { id: BigInt(noteId), userId },
+			where: { id, userId },
 		});
 
 		if (!note) {
@@ -89,8 +126,8 @@ export async function updateNote(
 		await prisma.note.update({
 			where: { id: note.id },
 			data: {
-				title: parsed.output.title,
-				content: parsed.output.content ?? null,
+				title: parsed.data.title,
+				content: parsed.data.content,
 			},
 		});
 	} catch {
@@ -102,9 +139,14 @@ export async function updateNote(
 }
 
 export async function deleteNote(noteId: string): Promise<void> {
+	const id = parseNoteId(noteId);
+	if (id === undefined) {
+		throw new Error('Invalid note id');
+	}
+
 	const userId = await requireLocalUserId();
 	const note = await prisma.note.findFirst({
-		where: { id: BigInt(noteId), userId },
+		where: { id, userId },
 	});
 
 	if (!note) {
@@ -133,8 +175,13 @@ export async function getNotesForCurrentUser() {
 }
 
 export async function getNoteForCurrentUser(noteId: string) {
+	const id = parseNoteId(noteId);
+	if (id === undefined) {
+		notFound();
+	}
+
 	const userId = await requireLocalUserId();
 	return prisma.note.findFirst({
-		where: { id: BigInt(noteId), userId },
+		where: { id, userId },
 	});
 }

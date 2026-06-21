@@ -1,6 +1,4 @@
 import Link from 'next/link';
-import { auth } from '@clerk/nextjs/server';
-import { redirect } from 'next/navigation';
 import { PageContainer } from '@/app/components/page-container';
 import { PageHeader } from '@/app/components/page-header';
 import { NoteCard } from '@/app/notes/_components/note-card';
@@ -15,11 +13,6 @@ function noteCountLabel(count: number): string {
 }
 
 export default async function NotesPage() {
-	const { userId } = await auth();
-	if (!userId) {
-		redirect('/sign-in');
-	}
-
 	const notes = await getNotesForCurrentUser();
 
 	return (
@@ -28,14 +21,17 @@ export default async function NotesPage() {
 				title="Notes"
 				description={notes.length > 0 ? noteCountLabel(notes.length) : undefined}
 				action={
-					<Link href="/notes/new" className="btn btn-primary">
+					<Link href="/notes/new" className="btn btn-primary" data-testid="new-note-link">
 						New note
 					</Link>
 				}
 			/>
 
 			{notes.length === 0 ? (
-				<div className="card bg-base-50 border border-base-300 shadow-sm rounded-box max-w-md mx-auto text-center">
+				<div
+					className="card bg-base-50 border border-base-300 shadow-sm rounded-box max-w-md mx-auto text-center"
+					data-testid="notes-empty-state"
+				>
 					<div className="card-body items-center py-12">
 						<div
 							className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 mb-2"
@@ -53,7 +49,7 @@ export default async function NotesPage() {
 					</div>
 				</div>
 			) : (
-				<ul className="flex flex-col gap-3">
+				<ul className="flex flex-col gap-3" data-testid="notes-list">
 					{notes.map(note => (
 						<NoteCard
 							key={note.id.toString()}

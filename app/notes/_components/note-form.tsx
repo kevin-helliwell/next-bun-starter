@@ -48,6 +48,7 @@ export function NoteForm({
 						className={titleClassName}
 						placeholder="Note title"
 						required
+						data-testid="note-title-input"
 					/>
 					{state.errors.title ? (
 						<span className="text-error text-sm mt-1">{state.errors.title}</span>
@@ -61,18 +62,28 @@ export function NoteForm({
 						defaultValue={defaultContent}
 						className={contentClassName}
 						placeholder="Start writing…"
+						data-testid="note-content-input"
 					/>
 				</label>
 
 				{state.errors.form ? <p className="text-error text-sm">{state.errors.form}</p> : null}
 
 				<div className="sticky bottom-0 flex gap-2 pt-4 border-t border-base-300/60 bg-base-50">
-					<button type="submit" className="btn btn-primary" disabled={pending}>
+					<button
+						type="submit"
+						className="btn btn-primary"
+						disabled={pending}
+						data-testid="note-submit-button"
+					>
 						{pending ? 'Saving…' : submitLabel}
 					</button>
-					<Link href="/notes" className="btn btn-ghost" aria-disabled={pending}>
-						Cancel
-					</Link>
+					{pending ? (
+						<span className="btn btn-ghost btn-disabled pointer-events-none">Cancel</span>
+					) : (
+						<Link href="/notes" className="btn btn-ghost" data-testid="note-cancel-link">
+							Cancel
+						</Link>
+					)}
 				</div>
 			</form>
 		</div>
