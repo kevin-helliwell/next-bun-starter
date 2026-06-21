@@ -99,7 +99,7 @@ GitHub Actions secrets: `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`, `VERCEL_TOKEN`
 
 Workflow: `.github/workflows/deploy-production.yml`
 
-Set these in **Vercel → Project → Settings → Environment Variables → Production** (the workflow runs `vercel pull` and uses them for migrate + build):
+Set these in **Vercel → Project → Settings → Environment Variables → Production** (the workflow runs `vercel pull` for build settings; migrations use `vercel env run` because Neon/Marketplace `DATABASE_URL` is **Sensitive** and is not written to `.vercel/.env.production.local`):
 
 | Variable | Purpose |
 | --- | --- |
@@ -112,10 +112,11 @@ Set these in **Vercel → Project → Settings → Environment Variables → Pro
 After adding `DATABASE_URL`, run migrations once if the deploy workflow has never succeeded:
 
 ```bash
-vercel env pull .env.production.local --environment=production
-set -a && source .env.production.local && set +a
-bunx prisma migrate deploy
+vercel link
+vercel env run --environment=production -- bunx prisma migrate deploy
 ```
+
+`vercel env pull` cannot export Sensitive production secrets (including Neon-injected `DATABASE_URL`); use `vercel env run` instead.
 
 ### Neon preview databases (PRs)
 

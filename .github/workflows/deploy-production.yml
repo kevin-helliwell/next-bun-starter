@@ -18,29 +18,31 @@ jobs:
       - name: Pull Vercel Environment Information
         run: bunx vercel@latest pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
 
-      - name: Verify production env from Vercel
+      - name: Verify production DATABASE_URL via Vercel
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
           if [ ! -f .vercel/.env.production.local ]; then
             echo "::error::Missing .vercel/.env.production.local after vercel pull."
             exit 1
           fi
-          set -a
-          source .vercel/.env.production.local
-          set +a
-          if [ -z "${DATABASE_URL:-}" ]; then
-            echo "::error::DATABASE_URL is not set in Vercel Production env vars."
-            echo "Add it at: Vercel project → Settings → Environment Variables → Production"
-            echo "Use your hosted Postgres connection string (Neon, Vercel Postgres, etc.)."
-            exit 1
-          fi
+          # Neon/Marketplace DATABASE_URL is Sensitive — vercel pull leaves it empty.
+          # vercel env run injects production secrets at runtime without writing them to disk.
+          bunx vercel@latest env run --environment=production --token="$VERCEL_TOKEN" -- \
+            sh -c 'if [ -z "${DATABASE_URL:-}" ]; then
+              echo "::error::DATABASE_URL is not available for Vercel Production."
+              echo "In Vercel → Project → Settings → Environment Variables, confirm DATABASE_URL is enabled for Production."
+              echo "If Neon is connected, re-save the integration or add DATABASE_URL manually for Production."
+              exit 1
+            fi'
 
       - name: Run Prisma Migrations
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
-          set -a
-          source .vercel/.env.production.local
-          set +a
           for attempt in 1 2 3 4 5; do
-            bunx prisma migrate deploy && exit 0
+            bunx vercel@latest env run --environment=production --token="$VERCEL_TOKEN" -- \
+              bunx prisma migrate deploy && exit 0
             echo "Migration attempt ${attempt} failed; retrying in 10s..."
             sleep 10
           done
