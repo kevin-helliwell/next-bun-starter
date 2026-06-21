@@ -26,12 +26,8 @@ yarn-error.log*
 
 # Testing
 coverage
-.nyc_output
 cypress/videos
 cypress/screenshots
-test-results
-playwright-report
-playwright/.cache
 
 # Database migrations (SQL files)
 prisma/migrations/**/*.sql

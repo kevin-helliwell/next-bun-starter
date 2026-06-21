@@ -52,16 +52,7 @@ cypress.env.json
 
 .devcontainer/
 
-
-# Shell scripts
-config.sh
-generate_config.sh
-
 # Misc
-/test-results/
-/playwright-report/
-/blob-report/
-/playwright/.cache/
 cypress/downloads/
 
 # Sentry Config File

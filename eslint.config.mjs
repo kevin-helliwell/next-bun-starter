@@ -10,7 +10,6 @@ export default defineConfig([
 	globalIgnores([
 		'**/next.config.js',
 		'**/prisma/generated/**',
-		'**/.github/actions/**/dist/**',
 		'**/postcss.config.js',
 		'**/eslint.config.mjs',
 	]),
