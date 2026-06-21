@@ -7,7 +7,7 @@ import { match } from 'ts-pattern';
 import * as v from 'valibot';
 import superjson from 'superjson';
 import { prisma } from '@/prisma';
-import { getLocalUserId } from '@/app/lib/data';
+import { getOrCreateLocalUserId } from '@/app/lib/data';
 
 const noteSchema = v.object({
 	title: v.pipe(v.string(), v.minLength(1, 'Title is required')),
@@ -22,9 +22,9 @@ async function requireLocalUserId(): Promise<bigint> {
 		redirect('/sign-in');
 	}
 
-	const localUserId = await getLocalUserId(userId);
+	const localUserId = await getOrCreateLocalUserId(userId);
 	if (!localUserId) {
-		throw new Error('Local user record not found. Ensure the Clerk webhook is configured.');
+		throw new Error('Could not sync local user record from Clerk.');
 	}
 
 	return superjson.parse<bigint>(localUserId);
@@ -121,7 +121,7 @@ export async function getNotesForCurrentUser() {
 		return [];
 	}
 
-	const localUserId = await getLocalUserId(userId);
+	const localUserId = await getOrCreateLocalUserId(userId);
 	if (!localUserId) {
 		return [];
 	}

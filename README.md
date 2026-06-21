@@ -40,6 +40,8 @@ Open [http://localhost:3000](http://localhost:3000).
 4. Create a webhook pointing to `/api/webhooks/user-create` for `user.created`, `user.updated`, `user.deleted`.
 5. Copy the signing secret to `WEBHOOK_SECRET`.
 
+The webhook keeps user email updates and deletions in sync. If it is missing, the app still creates a local `User` on first authenticated request (notes, etc.) via the Clerk API.
+
 ### PostgreSQL (local)
 
 Docker Compose runs Postgres on port **5433** (see `compose.local.yml`).
