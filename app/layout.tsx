@@ -31,7 +31,11 @@ export default async function RootLayout({ children }: RootLayoutProps) {
 	return (
 		<html lang="en" className={outfit.className} suppressHydrationWarning>
 			<body className="p-0 flex flex-col min-h-screen">
-				<ClerkProvider publishableKey={publishableKey} signUpForceRedirectUrl="/notes">
+				<ClerkProvider
+					publishableKey={publishableKey}
+					signInUrl="/sign-in"
+					signUpForceRedirectUrl="/notes"
+				>
 					<Navigation />
 					<main className="flex-grow">{children}</main>
 					<Footer />
