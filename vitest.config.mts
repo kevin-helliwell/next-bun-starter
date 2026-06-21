@@ -54,7 +54,6 @@ export default defineConfig({
 			provider: 'v8',
 			include: ['app/**/*', 'lib/**/*'],
 			exclude: ['**/*.test.{ts,tsx}'],
-			all: true,
 		},
 	},
 	resolve: {

@@ -1,6 +1,25 @@
-@import 'tailwindcss/base';
-@import 'tailwindcss/components';
-@import 'tailwindcss/utilities';
+@import 'tailwindcss';
+
+@source '../cypress/**/*.{js,ts,jsx,tsx}';
+
+@plugin 'daisyui' {
+	themes: app --default;
+}
+
+@plugin 'daisyui/theme' {
+	name: 'app';
+	default: true;
+	color-scheme: light;
+	--color-primary: #017bff;
+	--color-secondary: #2cc582;
+	--color-base-100: #eff9ff;
+}
+
+@theme {
+	--font-family-outfit: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
+	--color-gray-light: #f6f6f6;
+	--color-gray-dark: #585858;
+}
 
 html,
 body {
