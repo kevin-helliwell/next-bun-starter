@@ -89,7 +89,7 @@ Add these under **Settings → Secrets and variables → Actions → New reposit
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY_TEST` | Clerk **test** publishable key (`pk_test_…`) |
 | `CLERK_SECRET_KEY_TEST` | Clerk **test** secret key (`sk_test_…`) |
 | `CYPRESS_CLERK_TEST_PASSWORD` | Password for a Clerk test user |
-| `CLERK_TEST_EMAIL_TEST` | Optional — test user email (e.g. `you+clerk_test@example.com`) for full password sign-in in CI |
+| `CLERK_TEST_EMAIL_TEST` | Optional — test user email (e.g. `you+clerk_test@example.com`) for full password sign-in in CI. **Create this user in the Clerk dashboard** with the same password as `CYPRESS_CLERK_TEST_PASSWORD`. |
 
 Use keys from a Clerk **development** instance (same app as local `.env.local`). E2E fails if any secret is missing — the app returns HTTP 500 without Clerk keys.
 
