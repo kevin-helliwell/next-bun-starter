@@ -29,14 +29,14 @@ export default async function RootLayout({ children }: RootLayoutProps) {
 	}
 
 	return (
-		<ClerkProvider publishableKey={publishableKey} signUpForceRedirectUrl="/notes">
-			<html lang="en" className={outfit.className} suppressHydrationWarning>
-				<body className="p-0 flex flex-col min-h-screen">
+		<html lang="en" className={outfit.className} suppressHydrationWarning>
+			<body className="p-0 flex flex-col min-h-screen">
+				<ClerkProvider publishableKey={publishableKey} signUpForceRedirectUrl="/notes">
 					<Navigation />
 					<main className="flex-grow">{children}</main>
 					<Footer />
-				</body>
-			</html>
-		</ClerkProvider>
+				</ClerkProvider>
+			</body>
+		</html>
 	);
 }

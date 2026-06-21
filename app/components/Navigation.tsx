@@ -1,5 +1,6 @@
 import { auth, currentUser } from '@clerk/nextjs/server';
 import ClerkSignInButton from './ClerkSignInButton';
+import ClerkSignUpButton from './ClerkSignUpButton';
 import ClerkUserMenuButton from './ClerkUserMenuButton';
 import { DesktopNavigationBar, MobileNavigationBar, NavigationLinks } from './navigation-bars';
 
@@ -17,7 +18,10 @@ export default async function Navigation() {
 						userImage={user.imageUrl || ''}
 					/>
 				) : (
-					<ClerkSignInButton />
+					<div className="flex gap-2">
+						<ClerkSignInButton />
+						<ClerkSignUpButton />
+					</div>
 				)}
 			</div>
 			<MobileNavigationBar navLinks={navLinks} />

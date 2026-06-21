@@ -12,7 +12,7 @@ vi.mock('next/image', () => ({
 
 // Mock Clerk components
 vi.mock('@clerk/nextjs', () => ({
-	SignedIn: ({ children }: { children: React.ReactNode }) => (
+	Show: ({ children }: { children: React.ReactNode }) => (
 		<div data-testid="signed-in">{children}</div>
 	),
 	SignOutButton: ({ children }: { children: React.ReactNode }) => (
@@ -27,7 +27,7 @@ describe('ClerkUserMenuButton', () => {
 		userImage: '/test-image.jpg',
 	};
 
-	it('renders within SignedIn component', () => {
+	it('renders within Show when signed in', () => {
 		render(<ClerkUserMenuButton {...mockProps} />);
 		expect(screen.getByTestId('signed-in')).toBeInTheDocument();
 	});

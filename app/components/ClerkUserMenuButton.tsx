@@ -1,6 +1,6 @@
 'use client';
 
-import { SignedIn } from '@clerk/nextjs';
+import { Show } from '@clerk/nextjs';
 import { useCallback, useRef, useState } from 'react';
 import { ClerkUserMenuDropdown } from './clerk-user-menu-dropdown';
 import { ClerkUserProfileModal } from './clerk-user-profile-modal';
@@ -26,7 +26,7 @@ export default function ClerkUserMenuButton({ userName, userImage }: ClerkUserMe
 
 	return (
 		<>
-			<SignedIn>
+			<Show when="signed-in">
 				<div className="relative top-5 mr-3" ref={dropdownRef}>
 					<ClerkUserMenuDropdown
 						userName={userName}
@@ -37,7 +37,7 @@ export default function ClerkUserMenuButton({ userName, userImage }: ClerkUserMe
 						onManageAccount={openManageAccount}
 					/>
 				</div>
-			</SignedIn>
+			</Show>
 
 			<ClerkUserProfileModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
 		</>
