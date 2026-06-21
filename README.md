@@ -97,7 +97,15 @@ Set `CLERK_TEST_EMAIL` in `cypress.env.json` locally (see `cypress.env.json.exam
 
 GitHub Actions secrets: `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`, `VERCEL_TOKEN`
 
-Optional for production CI: `DATABASE_URL` — Neon **main** branch connection string. Used for `prisma migrate deploy` (step env) and written into `.vercel/.env.production.local` for `vercel build` (the CLI does not read GitHub step env). Vercel still uses its own `DATABASE_URL` at deploy runtime.
+Optional GitHub Actions secrets for **prebuilt** production CI (same values as Vercel Production; used when Sensitive vars are not in `.vercel/.env.production.local` after `vercel pull`):
+
+| Secret | Purpose |
+| --- | --- |
+| `DATABASE_URL` | Neon **main** branch — migrations + `.vercel/.env.production.local` |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk publishable key — **required at build time** for `vercel deploy --prebuilt` |
+| `CLERK_SECRET_KEY` | Clerk secret — written into build env file when set |
+
+Vercel Production env vars still apply at **runtime** on `*.vercel.app`; `NEXT_PUBLIC_*` must also be present when `vercel build` runs on GitHub Actions.
 
 Workflow: `.github/workflows/deploy-production.yml`
 

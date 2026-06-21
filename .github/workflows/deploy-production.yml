@@ -23,25 +23,54 @@ jobs:
       - name: Remove dev env files for production CI
         run: rm -f .env.development .env .env.local
 
-      # vercel build reads .vercel/.env.production.local, not the step env.
-      # GitHub DATABASE_URL must be written there; vercel pull leaves Sensitive values empty.
+      # vercel build reads .vercel/.env.production.local, not step env.
+      # Sensitive Vercel vars (and NEXT_PUBLIC_* for prebuilt bundles) need to be
+      # in that file and/or injected via vercel env run at build time.
       - name: Prepare production env for vercel build
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
         run: |
-          if [ -z "${DATABASE_URL:-}" ]; then
-            echo "No DATABASE_URL GitHub secret; vercel build will use vercel env run or pulled Vercel vars."
-            exit 0
-          fi
           env_file=".vercel/.env.production.local"
           if [ ! -f "$env_file" ]; then
             echo "::error::Missing $env_file after vercel pull."
             exit 1
           fi
-          grep -v '^DATABASE_URL=' "$env_file" > "${env_file}.tmp" || true
-          mv "${env_file}.tmp" "$env_file"
-          printf 'DATABASE_URL="%s"\n' "$DATABASE_URL" >> "$env_file"
-          echo "Wrote DATABASE_URL from GitHub Actions secret into $env_file for vercel build."
+          set_env_var() {
+            key="$1"
+            value="$2"
+            if [ -z "${value:-}" ]; then
+              return 0
+            fi
+            grep -v "^${key}=" "$env_file" > "${env_file}.tmp" || true
+            mv "${env_file}.tmp" "$env_file"
+            printf '%s="%s"\n' "$key" "$value" >> "$env_file"
+            echo "Wrote $key from GitHub Actions secret into $env_file."
+          }
+          set_env_var DATABASE_URL "$DATABASE_URL"
+          set_env_var NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY "$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"
+          set_env_var CLERK_SECRET_KEY "$CLERK_SECRET_KEY"
+
+      - name: Verify Clerk publishable key for production build
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+        run: |
+          if [ -n "${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:-}" ]; then
+            echo "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY present in GitHub Actions secret."
+            exit 0
+          fi
+          if [ -f .vercel/.env.production.local ] && grep -q '^NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=.' .vercel/.env.production.local; then
+            echo "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY present in .vercel/.env.production.local."
+            exit 0
+          fi
+          bunx vercel@latest env run --environment=production --token="$VERCEL_TOKEN" -- \
+            sh -c 'if [ -z "${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:-}" ]; then
+              echo "::error::NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY is required at build time for prebuilt deploys."
+              echo "Add it to Vercel Production env vars and/or GitHub Actions secrets."
+              exit 1
+            fi'
 
       - name: Verify production DATABASE_URL
         env:
@@ -106,16 +135,11 @@ jobs:
       - name: Build Project Artifacts
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
         run: |
-          # vercel build loads env from .vercel/ (see Prepare production env step).
-          # Without a GitHub secret, inject Sensitive vars via vercel env run.
-          if [ -n "${DATABASE_URL:-}" ]; then
+          # Prebuilt deploys bake NEXT_PUBLIC_* at build time on the runner.
+          # vercel env run injects Vercel Production vars (incl. Sensitive Clerk keys).
+          bunx vercel@latest env run --environment=production --token="$VERCEL_TOKEN" -- \
             bunx vercel@latest build --prod --token="$VERCEL_TOKEN"
-          else
-            bunx vercel@latest env run --environment=production --token="$VERCEL_TOKEN" -- \
-              bunx vercel@latest build --prod --token="$VERCEL_TOKEN"
-          fi
       - name: Deploy Project Artifacts to Vercel
         run: bunx vercel@latest deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
