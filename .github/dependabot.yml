@@ -9,8 +9,6 @@ updates:
       - "dependencies"
       - "automerge"
     versioning-strategy: increase
-    reviewers:
-      - "kevin-helliwell"
     groups:
       dependencies:
         patterns:
@@ -24,5 +22,3 @@ updates:
     labels:
       - "dependencies"
       - "automerge"
-    reviewers:
-      - "kevin-helliwell"
