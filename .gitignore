@@ -64,3 +64,4 @@ prisma/generated/
 # Agent interaction files for devs
 .claude/
 .fallow/
+.env*
