@@ -50,15 +50,6 @@ main {
 	flex-grow: 1;
 }
 
-header {
-	color: #555;
-	padding: 0.3rem 2.5rem;
-}
-
-header .app-title {
-	font-size: 1.5rem;
-}
-
 select,
 select option {
 	font-family:

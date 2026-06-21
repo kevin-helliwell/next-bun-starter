@@ -5,8 +5,18 @@ import { vi, expect } from 'vitest';
 import '@testing-library/jest-dom';
 
 vi.mock('next/link', () => ({
-	default: ({ href, children }: { href: string; children: React.ReactNode }) => (
-		<a href={href}>{children}</a>
+	default: ({
+		href,
+		children,
+		className,
+	}: {
+		href: string;
+		children: React.ReactNode;
+		className?: string;
+	}) => (
+		<a href={href} className={className}>
+			{children}
+		</a>
 	),
 }));
 
@@ -21,7 +31,8 @@ describe('NavLinkItem', () => {
 		const listItem = screen.getByRole('listitem');
 		expect(listItem).toBeInTheDocument();
 		expect(screen.getByText('Test Link')).toBeInTheDocument();
-		expect(screen.getByRole('listitem')).toHaveClass('p-2 hover:bg-base-200 rounded-md');
+		expect(screen.getByRole('listitem')).toHaveClass('rounded-md');
+		expect(screen.getByRole('link')).toHaveClass('px-4', 'py-2');
 	});
 
 	it('calls handleClick and blurs active element if inside dropdown', () => {

@@ -27,7 +27,7 @@ export default function ClerkUserMenuButton({ userName, userImage }: ClerkUserMe
 	return (
 		<>
 			<Show when="signed-in">
-				<div className="relative top-5 mr-3" ref={dropdownRef}>
+				<div className="relative" ref={dropdownRef}>
 					<ClerkUserMenuDropdown
 						userName={userName}
 						userImage={userImage}

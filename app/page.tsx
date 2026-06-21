@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { auth } from '@clerk/nextjs/server';
-import ClerkSignInButton from './components/ClerkSignInButton';
 import ClerkSignUpButton from './components/ClerkSignUpButton';
 
 export default async function HomePage() {
@@ -9,17 +8,22 @@ export default async function HomePage() {
 	return (
 		<div className="container mx-auto px-4 py-16 max-w-3xl text-center">
 			<h1 className="text-4xl font-bold mb-4">My App</h1>
-			<p className="text-lg text-gray-dark mb-8">
-				A Bun + Next.js starter with Clerk auth, Prisma, and PostgreSQL.
+			<p className="text-lg text-base-content/80 mb-8">
+				Capture ideas in simple notes — private to you.
 			</p>
 			{userId ? (
-				<Link href="/notes" className="btn btn-primary">
+				<Link href="/notes" className="btn btn-primary btn-lg">
 					Go to your notes
 				</Link>
 			) : (
-				<div className="flex justify-center gap-3">
-					<ClerkSignInButton />
-					<ClerkSignUpButton />
+				<div className="flex flex-col items-center gap-4">
+					<ClerkSignUpButton label="Get started" className="btn btn-primary btn-lg" />
+					<p className="text-base-content/70">
+						Already have an account?{' '}
+						<Link href="/sign-in" className="link link-primary">
+							Sign in
+						</Link>
+					</p>
 				</div>
 			)}
 		</div>

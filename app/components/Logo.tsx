@@ -6,9 +6,9 @@ const Logo = () => {
 		<Link
 			href="/"
 			data-testid="logo-link"
-			className="btn btn-link text-xl no-underline hover:no-underline flex flex-col items-center whitespace-nowrap"
+			className="btn btn-link text-xl no-underline hover:no-underline px-2 normal-case"
 		>
-			<span className="text-primary font-outfit text-3xl sm:text-4xl">My App</span>
+			<span className="text-primary font-outfit text-2xl">My App</span>
 		</Link>
 	);
 };

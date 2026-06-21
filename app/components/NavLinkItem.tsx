@@ -23,9 +23,9 @@ export default function NavLinkItem({ href, children }: NavLinkItemProps) {
 	return (
 		<li
 			onClick={handleClick}
-			className={`p-2 hover:bg-base-200 rounded-md ${isActive ? 'bg-primary/10 text-primary' : ''}`}
+			className={`rounded-md ${isActive ? 'bg-primary/10 text-primary' : ''}`}
 		>
-			<Link href={href} className="block w-full h-full">
+			<Link href={href} className="block px-4 py-2 hover:bg-base-200 rounded-md">
 				{children}
 			</Link>
 		</li>

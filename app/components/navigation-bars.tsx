@@ -6,63 +6,53 @@ function MenuIcon() {
 	return (
 		<svg
 			xmlns="http://www.w3.org/2000/svg"
-			className="h-7 w-7"
+			className="h-6 w-6"
 			fill="none"
 			viewBox="0 0 24 24"
 			stroke="currentColor"
+			aria-hidden="true"
 		>
 			<path
 				strokeLinecap="round"
 				strokeLinejoin="round"
 				strokeWidth="2"
-				d="M4 6h16M4 12h8m-8 6h16"
+				d="M4 6h16M4 12h16M4 18h16"
 			/>
 		</svg>
 	);
 }
 
-interface NavigationBarsProps {
+interface NavigationBarProps {
 	readonly navLinks: ReactNode;
+	readonly authSection: ReactNode;
 }
 
-export function MobileNavigationBar({ navLinks }: NavigationBarsProps) {
+export function NavigationBar({ navLinks, authSection }: NavigationBarProps) {
 	return (
-		<>
-			<div className="max-[850px]:pt-4 min-[851px]:hidden w-16">
+		<div className="navbar bg-base-100 border-b border-base-300 px-4 min-h-16">
+			<div className="navbar-start gap-1">
+				<div className="dropdown min-[851px]:hidden">
+					<div
+						tabIndex={0}
+						role="button"
+						className="btn btn-ghost btn-square"
+						aria-label="Open menu"
+					>
+						<MenuIcon />
+					</div>
+					<ul
+						tabIndex={0}
+						className="menu menu-sm dropdown-content mt-3 p-2 shadow-lg bg-white border border-base-300 rounded-box w-52 z-[100]"
+					>
+						{navLinks}
+					</ul>
+				</div>
 				<Logo />
 			</div>
-			<div className="navbar bg-base-100 p-0 max-[850px]:block min-[851px]:hidden relative">
-				<div className="navbar-start">
-					<div className="dropdown inline-block">
-						<div tabIndex={0} role="button" className="btn btn-ghost pr-0 max-sm:p-0">
-							<MenuIcon />
-						</div>
-						<ul
-							tabIndex={0}
-							className="menu menu-sm dropdown-content mt-3 p-2 shadow bg-base-100 rounded-box w-52 z-[100]"
-						>
-							{navLinks}
-						</ul>
-					</div>
-				</div>
+			<div className="navbar-center hidden min-[851px]:flex">
+				<ul className="menu menu-horizontal gap-1 px-1">{navLinks}</ul>
 			</div>
-		</>
-	);
-}
-
-export function DesktopNavigationBar({ navLinks }: NavigationBarsProps) {
-	return (
-		<div className="navbar bg-base-100 p-0 max-[850px]:hidden min-[851px]:block relative">
-			<div className="navbar-start">
-				<div className="pt-8 min-[851px]:block">
-					<Logo />
-				</div>
-			</div>
-			<div className="navbar-center max-[850px]:hidden min-[851px]:inline-flex">
-				<ul className="menu menu-horizontal px-1 absolute z-20 top-6 left-[320px] md:left-[360px] lg:left-[400px] xl:left-[calc(50%+10px)] xl:-translate-x-1/2 flex-nowrap gap-1 text-sm">
-					{navLinks}
-				</ul>
-			</div>
+			<div className="navbar-end">{authSection}</div>
 		</div>
 	);
 }

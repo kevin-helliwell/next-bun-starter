@@ -18,10 +18,6 @@ vi.mock('./ClerkSignInButton', () => ({
 	default: () => <div data-testid="sign-in">Sign In</div>,
 }));
 
-vi.mock('./ClerkSignUpButton', () => ({
-	default: () => <div data-testid="sign-up">Sign Up</div>,
-}));
-
 vi.mock('./Logo', () => ({
 	default: () => <div data-testid="logo-component">Logo</div>,
 }));
@@ -46,7 +42,7 @@ describe('Navigation', () => {
 		render(await Navigation());
 
 		expect(screen.getByTestId('sign-in')).toBeInTheDocument();
-		expect(screen.getByTestId('sign-up')).toBeInTheDocument();
+		expect(screen.queryByTestId('sign-up')).not.toBeInTheDocument();
 	});
 
 	it('renders user menu and notes link when authenticated', async () => {

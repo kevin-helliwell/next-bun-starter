@@ -1,13 +1,17 @@
 'use client';
 
-import { SignInButton } from '@clerk/nextjs';
+import Link from 'next/link';
 
-export default function ClerkSignInButton() {
+interface ClerkSignInButtonProps {
+	readonly variant?: 'primary' | 'outline';
+}
+
+export default function ClerkSignInButton({ variant = 'primary' }: ClerkSignInButtonProps) {
+	const className = variant === 'outline' ? 'btn btn-outline btn-primary' : 'btn btn-primary';
+
 	return (
-		<SignInButton mode="redirect" forceRedirectUrl="/notes">
-			<button type="button" className="btn btn-primary">
-				Sign In
-			</button>
-		</SignInButton>
+		<Link href="/sign-in" className={className}>
+			Sign In
+		</Link>
 	);
 }

@@ -1,7 +1,12 @@
 import Link from 'next/link';
 import { auth } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
+import { NoteCard } from '@/app/notes/_components/note-card';
 import { deleteNote, getNotesForCurrentUser } from '@/app/server-actions/notes';
+
+function formatNoteDate(date: Date): string {
+	return new Intl.DateTimeFormat('en-US', { dateStyle: 'medium' }).format(date);
+}
 
 export default async function NotesPage() {
 	const { userId } = await auth();
@@ -21,9 +26,9 @@ export default async function NotesPage() {
 			</div>
 
 			{notes.length === 0 ? (
-				<div className="card bg-base-100 shadow">
+				<div className="card bg-white border border-base-300 shadow-sm">
 					<div className="card-body items-center text-center">
-						<p className="text-gray-dark">No notes yet.</p>
+						<p className="text-base-content/80">No notes yet.</p>
 						<div className="card-actions">
 							<Link href="/notes/new" className="btn btn-primary">
 								Create your first note
@@ -32,24 +37,16 @@ export default async function NotesPage() {
 					</div>
 				</div>
 			) : (
-				<ul className="flex flex-col gap-4">
+				<ul className="flex flex-col gap-6">
 					{notes.map(note => (
-						<li key={note.id.toString()} className="card bg-base-100 shadow">
-							<div className="card-body">
-								<h2 className="card-title">{note.title}</h2>
-								{note.content ? <p className="whitespace-pre-wrap">{note.content}</p> : null}
-								<div className="card-actions justify-end">
-									<Link href={`/notes/${note.id.toString()}/edit`} className="btn btn-sm btn-ghost">
-										Edit
-									</Link>
-									<form action={deleteNote.bind(null, note.id.toString())}>
-										<button type="submit" className="btn btn-sm btn-error btn-outline">
-											Delete
-										</button>
-									</form>
-								</div>
-							</div>
-						</li>
+						<NoteCard
+							key={note.id.toString()}
+							id={note.id.toString()}
+							title={note.title}
+							content={note.content}
+							updatedAtLabel={formatNoteDate(note.updatedAt)}
+							deleteAction={deleteNote.bind(null, note.id.toString())}
+						/>
 					))}
 				</ul>
 			)}
