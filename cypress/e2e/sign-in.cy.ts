@@ -4,7 +4,6 @@ addClerkCommands({ Cypress, cy });
 
 const SIGN_IN_ROOT = '[data-clerk-component="SignIn"]';
 const IDENTIFIER_INPUT = 'input[name="identifier"]';
-const PASSWORD_INPUT = 'input[name="password"]';
 const CONTINUE_BUTTON = '.cl-formButtonPrimary';
 const MODAL_CLOSE = 'button[aria-label*="Close"], [data-clerk-element="modalCloseButton"]';
 const FORM_ERROR = '[data-testid="form-feedback-error"], .cl-formFieldErrorText';
