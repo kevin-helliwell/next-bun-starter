@@ -95,9 +95,27 @@ Set `CLERK_TEST_EMAIL` in `cypress.env.json` locally (see `cypress.env.json.exam
 
 ### Vercel production
 
-Secrets: `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`, `VERCEL_TOKEN`
+GitHub Actions secrets: `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`, `VERCEL_TOKEN`
 
 Workflow: `.github/workflows/deploy-production.yml`
+
+Set these in **Vercel → Project → Settings → Environment Variables → Production** (the workflow runs `vercel pull` and uses them for migrate + build):
+
+| Variable | Purpose |
+| --- | --- |
+| `DATABASE_URL` | Production Postgres connection string |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk publishable key (`pk_test_…` for dev instance on `*.vercel.app`) |
+| `CLERK_SECRET_KEY` | Clerk secret key |
+| `NEXT_PUBLIC_BASE_URL` | Production URL (e.g. `https://your-app.vercel.app`) |
+| `WEBHOOK_SECRET` | Clerk webhook signing secret |
+
+After adding `DATABASE_URL`, run migrations once if the deploy workflow has never succeeded:
+
+```bash
+vercel env pull .env.production.local --environment=production
+set -a && source .env.production.local && set +a
+bunx prisma migrate deploy
+```
 
 ### Neon preview databases (PRs)
 
