@@ -21,7 +21,16 @@ export default async function NotesPage() {
 			</div>
 
 			{notes.length === 0 ? (
-				<p className="text-gray-dark">No notes yet. Create your first one.</p>
+				<div className="card bg-base-100 shadow">
+					<div className="card-body items-center text-center">
+						<p className="text-gray-dark">No notes yet.</p>
+						<div className="card-actions">
+							<Link href="/notes/new" className="btn btn-primary">
+								Create your first note
+							</Link>
+						</div>
+					</div>
+				</div>
 			) : (
 				<ul className="flex flex-col gap-4">
 					{notes.map(note => (

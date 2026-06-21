@@ -10,6 +10,10 @@ vi.mock('next/link', () => ({
 	),
 }));
 
+vi.mock('next/navigation', () => ({
+	usePathname: () => '/',
+}));
+
 describe('NavLinkItem', () => {
 	it('renders correctly with given href and children', () => {
 		render(<NavLinkItem href="/test">Test Link</NavLinkItem>);
@@ -17,7 +21,7 @@ describe('NavLinkItem', () => {
 		const listItem = screen.getByRole('listitem');
 		expect(listItem).toBeInTheDocument();
 		expect(screen.getByText('Test Link')).toBeInTheDocument();
-		expect(screen.getByRole('listitem')).toHaveClass('p-2 hover:bg-gray-100 rounded-md');
+		expect(screen.getByRole('listitem')).toHaveClass('p-2 hover:bg-base-200 rounded-md');
 	});
 
 	it('calls handleClick and blurs active element if inside dropdown', () => {

@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import { auth } from '@clerk/nextjs/server';
+import ClerkSignInButton from './components/ClerkSignInButton';
+import ClerkSignUpButton from './components/ClerkSignUpButton';
 
 export default async function HomePage() {
 	const { userId } = await auth();
@@ -15,7 +17,10 @@ export default async function HomePage() {
 					Go to your notes
 				</Link>
 			) : (
-				<p className="text-gray-dark">Sign in to create and manage notes.</p>
+				<div className="flex justify-center gap-3">
+					<ClerkSignInButton />
+					<ClerkSignUpButton />
+				</div>
 			)}
 		</div>
 	);

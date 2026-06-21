@@ -31,7 +31,7 @@ export function MobileNavigationBar({ navLinks }: NavigationBarsProps) {
 			<div className="max-[850px]:pt-4 min-[851px]:hidden w-16">
 				<Logo />
 			</div>
-			<div className="navbar bg-white p-0 max-[850px]:block min-[851px]:hidden relative">
+			<div className="navbar bg-base-100 p-0 max-[850px]:block min-[851px]:hidden relative">
 				<div className="navbar-start">
 					<div className="dropdown inline-block">
 						<div tabIndex={0} role="button" className="btn btn-ghost pr-0 max-sm:p-0">
@@ -52,7 +52,7 @@ export function MobileNavigationBar({ navLinks }: NavigationBarsProps) {
 
 export function DesktopNavigationBar({ navLinks }: NavigationBarsProps) {
 	return (
-		<div className="navbar bg-white p-0 max-[850px]:hidden min-[851px]:block relative">
+		<div className="navbar bg-base-100 p-0 max-[850px]:hidden min-[851px]:block relative">
 			<div className="navbar-start">
 				<div className="pt-8 min-[851px]:block">
 					<Logo />

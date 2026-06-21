@@ -24,7 +24,7 @@ export function ClerkUserProfileModal({ isOpen, onClose }: ClerkUserProfileModal
 		>
 			<div className="max-h-[90%] max-w-[90%] overflow-auto rounded-lg bg-white p-5 shadow-lg">
 				<UserProfile routing="hash" />
-				<button type="button" onClick={onClose}>
+				<button type="button" onClick={onClose} className="btn btn-sm btn-ghost mt-4">
 					Close
 				</button>
 			</div>
