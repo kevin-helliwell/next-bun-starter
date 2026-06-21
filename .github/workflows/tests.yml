@@ -138,12 +138,20 @@ jobs:
           CYPRESS_CLERK_TEST_PASSWORD: ${{ secrets.CYPRESS_CLERK_TEST_PASSWORD }}
         run: |
           missing=0
-          for var in NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY CLERK_SECRET_KEY CYPRESS_CLERK_TEST_PASSWORD; do
-            if [ -z "${!var}" ]; then
-              echo "::error::Missing repository secret for E2E (Settings → Secrets and variables → Actions). See README → GitHub Actions secrets (E2E)."
+          check() {
+            if [ -z "$2" ]; then
+              echo "::error::Missing repository secret: $1"
               missing=1
             fi
-          done
+          }
+          check NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY_TEST "$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"
+          check CLERK_SECRET_KEY_TEST "$CLERK_SECRET_KEY"
+          check CYPRESS_CLERK_TEST_PASSWORD "$CYPRESS_CLERK_TEST_PASSWORD"
+          if [ "$missing" -eq 1 ]; then
+            echo ""
+            echo "Add secrets at: Settings → Secrets and variables → Actions"
+            echo "Use the same Clerk test keys as local .env.local (see README)."
+          fi
           exit $missing
 
       - name: Generate Prisma Client (if cache miss)
