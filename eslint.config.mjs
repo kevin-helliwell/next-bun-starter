@@ -1,11 +1,10 @@
 import { defineConfig, globalIgnores } from 'eslint/config';
 import nextVitals from 'eslint-config-next/core-web-vitals';
 import prettier from 'eslint-config-prettier/flat';
-import cypress from 'eslint-plugin-cypress/flat';
+import pluginCypress from 'eslint-plugin-cypress';
 
 export default defineConfig([
 	...nextVitals,
-	cypress.configs.recommended,
 	prettier,
 	globalIgnores([
 		'**/next.config.js',
@@ -13,6 +12,10 @@ export default defineConfig([
 		'**/postcss.config.js',
 		'**/eslint.config.mjs',
 	]),
+	{
+		files: ['cypress/**/*.ts', 'cypress/**/*.js'],
+		extends: [pluginCypress.configs.recommended],
+	},
 	{
 		files: ['**/*.ts', '**/*.tsx'],
 		languageOptions: {
