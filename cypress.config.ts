@@ -9,7 +9,6 @@ export default defineConfig({
 		env: {
 			CLERK_TEST_EMAIL: '',
 			CLERK_HOST: '',
-			CLERK_APP_NAME: 'My App',
 			CYPRESS_CLERK_TEST_PASSWORD: '',
 		},
 		setupNodeEvents(_on, config) {

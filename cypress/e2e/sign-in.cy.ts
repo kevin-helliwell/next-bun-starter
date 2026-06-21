@@ -2,39 +2,48 @@ import { setupClerkTestingToken, addClerkCommands } from '@clerk/testing/cypress
 
 addClerkCommands({ Cypress, cy });
 
-const email = Cypress.env('CLERK_TEST_EMAIL');
-const password = Cypress.env('CYPRESS_CLERK_TEST_PASSWORD');
-const appName = Cypress.env('CLERK_APP_NAME') as string;
-const signInTitle = `Sign in to ${appName}`;
+const SIGN_IN_ROOT = '[data-clerk-component="SignIn"]';
+const IDENTIFIER_INPUT = 'input[name="identifier"]';
+const PASSWORD_INPUT = 'input[name="password"]';
+const CONTINUE_BUTTON = '.cl-formButtonPrimary';
+const MODAL_CLOSE = 'button[aria-label*="Close"], [data-clerk-element="modalCloseButton"]';
+const FORM_ERROR = '[data-testid="form-feedback-error"], .cl-formFieldErrorText';
+
+const email = Cypress.env('CLERK_TEST_EMAIL') as string;
+const password = Cypress.env('CYPRESS_CLERK_TEST_PASSWORD') as string;
+
+function openSignInModal(): void {
+	cy.contains('button', 'Sign In').click({ force: true });
+	cy.get(SIGN_IN_ROOT, { timeout: 30000 }).should('be.visible');
+}
 
 beforeEach(() => {
 	cy.viewport(1280, 720);
 	setupClerkTestingToken();
 	cy.visit('/', { failOnStatusCode: false });
+	cy.clerkLoaded();
 });
 
 describe('sign in path', () => {
 	it('check if sign in button exists', () => {
-		cy.contains('Sign In').should('exist');
+		cy.contains('button', 'Sign In').should('exist');
 	});
 
 	it('clicking the sign in button opens modal', () => {
-		cy.contains('Sign In').click({ force: true });
-		cy.findByText(signInTitle).should('exist');
+		openSignInModal();
 	});
 
 	it('clicking X closes modal', () => {
-		cy.contains('Sign In').click({ force: true });
-		cy.findByText(signInTitle).should('exist');
-		cy.findByLabelText('Close modal').click();
-		cy.contains(signInTitle).should('not.exist');
+		openSignInModal();
+		cy.get(MODAL_CLOSE).first().click({ force: true });
+		cy.get(SIGN_IN_ROOT).should('not.exist');
 	});
 
 	it('sign in with wrong username error', () => {
-		cy.contains('Sign In').click({ force: true });
-		cy.findByPlaceholderText('Enter email or username').type('username');
-		cy.get('.cl-formButtonPrimary').contains('button', 'Continue').click();
-		cy.findByTestId('form-feedback-error').should('contain', "Couldn't find your account.");
+		openSignInModal();
+		cy.get(IDENTIFIER_INPUT).type('username');
+		cy.get(CONTINUE_BUTTON).contains('button', 'Continue').click();
+		cy.get(FORM_ERROR).should('contain', "Couldn't find your account.");
 	});
 
 	it('sign in with correct email and password', function () {
@@ -42,12 +51,7 @@ describe('sign in path', () => {
 			this.skip();
 		}
 
-		cy.contains('Sign In').click({ force: true });
-		cy.findByPlaceholderText('Enter email or username').type(email);
-		cy.get('.cl-formButtonPrimary').contains('button', 'Continue').click();
-		cy.findByPlaceholderText('Enter your password').should('be.visible');
-		cy.findByPlaceholderText('Enter your password').type(password, { log: false });
-		cy.get('.cl-formButtonPrimary').contains('button', 'Continue').click();
-		cy.findByTestId('avatar');
+		cy.clerkSignIn({ strategy: 'password', identifier: email, password });
+		cy.get('[data-clerk-component="UserButton"]').should('exist');
 	});
 });

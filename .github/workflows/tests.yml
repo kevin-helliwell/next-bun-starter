@@ -190,7 +190,7 @@ jobs:
           }
 
       - name: Run Cypress E2E Tests
-        run: bun run test:e2e:run -- --env CYPRESS_CLERK_TEST_PASSWORD=${{ secrets.CYPRESS_CLERK_TEST_PASSWORD }}
+        run: bun run test:e2e:run -- --env CYPRESS_CLERK_TEST_PASSWORD=${{ secrets.CYPRESS_CLERK_TEST_PASSWORD }},CLERK_TEST_EMAIL=${{ secrets.CLERK_TEST_EMAIL_TEST }}
         timeout-minutes: 10
         env:
           DATABASE_URL: 'postgres://postgres:postgres@localhost/db'

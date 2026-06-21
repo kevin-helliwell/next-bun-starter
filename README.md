@@ -33,7 +33,7 @@ Open [http://localhost:3000](http://localhost:3000).
 ### Clerk
 
 1. Create an application at [clerk.com](https://dashboard.clerk.com).
-2. Set **Application name** to match your project (used in sign-in UI and Cypress `CLERK_APP_NAME`).
+2. Set **Application name** in Clerk to match your project display name if you customize branding (optional for Cypress — tests use Clerk component selectors, not the app name).
 3. Add to `.env.local`:
    - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
    - `CLERK_SECRET_KEY`
@@ -87,10 +87,11 @@ Add these under **Settings → Secrets and variables → Actions → New reposit
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY_TEST` | Clerk **test** publishable key (`pk_test_…`) |
 | `CLERK_SECRET_KEY_TEST` | Clerk **test** secret key (`sk_test_…`) |
 | `CYPRESS_CLERK_TEST_PASSWORD` | Password for a Clerk test user |
+| `CLERK_TEST_EMAIL_TEST` | Optional — test user email (e.g. `you+clerk_test@example.com`) for full password sign-in in CI |
 
 Use keys from a Clerk **development** instance (same app as local `.env.local`). E2E fails if any secret is missing — the app returns HTTP 500 without Clerk keys.
 
-Set `CLERK_TEST_EMAIL` and `CLERK_HOST` in `cypress.env.json` locally (see `cypress.env.json.example`). The full sign-in test skips when those are unset; basic modal tests still run in CI.
+Set `CLERK_TEST_EMAIL` in `cypress.env.json` locally (see `cypress.env.json.example`). Clerk accepts test addresses with a `+clerk_test` suffix (e.g. `your_email+clerk_test@example.com`). Add `CLERK_TEST_EMAIL_TEST` as a repository secret to run the full password sign-in test in CI; otherwise that test is skipped.
 
 ### Vercel production
 
