@@ -19,8 +19,8 @@ git clone git@github.com:YOUR_ORG/my-app.git
 cd my-app
 ./scripts/init-project.sh   # optional: rename My App / my-app / myapp
 bun install
-cp env.local.example .env.local   # add Clerk keys
-cp .env.development .env
+cp env.local.example .env.local   # fill in Clerk keys
+cp .env.development .env          # or: bun run env_setup
 bun run pg:start                  # separate terminal
 bun run db:migrate:dev
 bun run dev
@@ -60,6 +60,7 @@ bun run db:seed     # optional demo data
 | `app/notes/`          | Example Notes CRUD                         |
 | `app/api/webhooks/`   | Clerk webhook handlers                     |
 | `prisma/`             | Schema, migrations, seed                   |
+| `public/`             | Static assets (empty by default)           |
 | `cypress/`            | E2E tests                                  |
 | `AGENTS.md`           | Coding conventions for humans and AI tools |
 

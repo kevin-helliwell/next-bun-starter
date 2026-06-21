@@ -12,7 +12,7 @@ const config: Config = {
 	theme: {
 		extend: {
 			fontFamily: {
-				outback: ['var(--font-outfit)'],
+				outfit: ['var(--font-outfit)'],
 			},
 			colors: {
 				'gray-light': '#F6F6F6',

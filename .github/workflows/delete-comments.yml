@@ -1,5 +1,3 @@
-#test comment to test the workflow
-
 name: Delete Old PR Comments
 
 on:

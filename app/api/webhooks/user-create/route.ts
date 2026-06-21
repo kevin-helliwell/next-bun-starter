@@ -49,7 +49,6 @@ export async function POST(request: Request) {
 	}
 
 	const { id, ...attributes } = payload.data;
-	console.log(payload);
 	// handle the webhook
 	const payloadType = payload.type;
 

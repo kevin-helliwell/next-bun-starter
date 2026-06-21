@@ -1,8 +1,8 @@
 #!/bin/sh
 changed(){
-  git diff --name-only HEAD^..HEAD | grep package-lock.json > /dev/null 2>&1
+  git diff --name-only HEAD^..HEAD | grep bun.lock > /dev/null 2>&1
 }
 if changed; then
-  echo 'npm packages change detected. Running npm ci...'
-  npm ci
+  echo 'Bun lockfile change detected. Running bun install...'
+  bun install
 fi;

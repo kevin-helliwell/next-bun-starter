@@ -10,7 +10,6 @@
 // ***********************************************
 //
 import '@testing-library/cypress/add-commands';
-import './org-form.js';
 
 //
 // -- This is a parent command --

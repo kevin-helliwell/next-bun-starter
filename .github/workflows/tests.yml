@@ -62,7 +62,6 @@ jobs:
       - name: Run unit tests
         run: bun run test:unit --run
         env:
-          RESEND_API_KEY: 'test-api-key' # Dummy value for tests - Resend is mocked
           NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY_TEST }}
 
   e2e:
@@ -155,7 +154,6 @@ jobs:
         env:
           DATABASE_URL: 'postgres://postgres:postgres@localhost/db'
           CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY_TEST }}
-          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           NEXT_PUBLIC_BASE_URL: ${{ secrets.NEXT_PUBLIC_BASE_URL }}
           NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY_TEST }}
           CYPRESS_CLERK_TEST_PASSWORD: ${{ secrets.CYPRESS_CLERK_TEST_PASSWORD }}

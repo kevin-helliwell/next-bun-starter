@@ -1,8 +1,6 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-.github/actions/add-asana-link-to-pr/node_modules
-.github/actions/weekly-report/node_modules
 /node_modules
 /.pnp
 .pnp.js
@@ -65,21 +63,12 @@ generate_config.sh
 /blob-report/
 /playwright/.cache/
 cypress/downloads/
-setup.py
-delete_images_script/deleteImagesOutput.txt
-read_neon_images_script/downloads/
-read_neon_images_script/output/
 
 # Sentry Config File
 .env.sentry-build-plugin
 
-# Prisma Script Outputs
-prisma/scripts/data-migration/backfillZipcode.updatedOrgIds.json
+# Prisma generated client
 prisma/generated/
-scripts/delete-images/deleteImagesOutput.txt
-app/create_issues.sh
-app/find_untested.py
-app/untested_files.txt
 
 # Agent interaction files for devs
 .claude/
