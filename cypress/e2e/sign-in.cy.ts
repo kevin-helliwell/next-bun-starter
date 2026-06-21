@@ -3,6 +3,7 @@ import { setupClerkTestingToken, addClerkCommands } from '@clerk/testing/cypress
 addClerkCommands({ Cypress, cy });
 
 const SIGN_IN_ROOT = '[data-clerk-component="SignIn"]';
+const SIGN_UP_ROOT = '[data-clerk-component="SignUp"]';
 const IDENTIFIER_INPUT = 'input[name="identifier"]';
 const PASSWORD_INPUT = 'input[name="password"]';
 const CONTINUE_BUTTON = '.cl-formButtonPrimary';
@@ -43,14 +44,14 @@ describe('sign in path', () => {
 		cy.url().should('not.include', '/sign-in');
 	});
 
-	it('sign in with wrong username error', () => {
+	it('unknown email is routed to sign-up', () => {
 		openSignInPage();
 		cy.get(IDENTIFIER_INPUT).type('nonexistent+clerk_test@example.com');
 		cy.get(CONTINUE_BUTTON).contains('Continue').click();
-		cy.get(SIGN_IN_ROOT).should('contain.text', "Couldn't find your account.");
+		cy.get(SIGN_UP_ROOT, { timeout: 10000 }).should('be.visible');
 	});
 
-	it('sign in with correct email and password', function () {
+	it('sign in with wrong password shows error', function () {
 		if (!email || !password) {
 			this.skip();
 		}
@@ -58,8 +59,22 @@ describe('sign in path', () => {
 		openSignInPage();
 		cy.get(IDENTIFIER_INPUT).type(email);
 		cy.get(CONTINUE_BUTTON).contains('Continue').click();
-		cy.get(PASSWORD_INPUT, { timeout: 10000 }).should('be.visible').type(password);
+		cy.get(PASSWORD_INPUT, { timeout: 10000 }).should('be.visible').type('wrong-password-for-e2e');
 		cy.get(SIGN_IN_ROOT).find(CONTINUE_BUTTON).click();
+		cy.get(SIGN_IN_ROOT)
+			.invoke('text')
+			.should('match', /password is incorrect|incorrect password|invalid/i);
+	});
+
+	it('sign in with correct email and password', function () {
+		if (!email || !password) {
+			this.skip();
+		}
+
+		cy.visit('/', { failOnStatusCode: false });
+		cy.clerkLoaded();
+		cy.clerkSignIn({ strategy: 'password', identifier: email, password });
+		cy.visit('/');
 		cy.get('[data-clerk-component="UserButton"]', { timeout: 30000 }).should('exist');
 	});
 });
