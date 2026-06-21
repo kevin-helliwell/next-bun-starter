@@ -93,7 +93,9 @@ Add these under **Settings → Secrets and variables → Actions → New reposit
 
 Use keys from a Clerk **development** instance (same app as local `.env.local`). E2E fails if any secret is missing — the app returns HTTP 500 without Clerk keys.
 
-Set `CLERK_TEST_EMAIL` in `cypress.env.json` locally (see `cypress.env.json.example`). Clerk accepts test addresses with a `+clerk_test` suffix (e.g. `your_email+clerk_test@example.com`). Add `CLERK_TEST_EMAIL_TEST` as a repository secret to run the full password sign-in test in CI; otherwise that test is skipped.
+**Local E2E credentials:** copy `cypress.env.json.example` to `cypress.env.json` (gitignored) and set `CLERK_TEST_EMAIL` and `CYPRESS_CLERK_TEST_PASSWORD`. Do not put secrets in `cypress.config.ts` — it is committed; empty defaults there are overridden by `cypress.env.json` locally and by `--env` in CI (`CLERK_TEST_EMAIL_TEST`, `CYPRESS_CLERK_TEST_PASSWORD` secrets).
+
+Clerk accepts test addresses with a `+clerk_test` suffix (e.g. `your_email+clerk_test@example.com`). Add `CLERK_TEST_EMAIL_TEST` as a repository secret to run the full password sign-in test in CI; otherwise those tests are skipped when the email env var is empty.
 
 ### Vercel production
 
