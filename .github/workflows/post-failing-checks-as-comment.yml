@@ -1,0 +1,124 @@
+name: Post failing checks to PR
+
+on:
+  workflow_run:
+    # Specify the workflows you want to monitor for failures
+    # Ensure these are the actual workflow file names (without .yml or .yaml)
+    workflows: ['Lint', 'Tests']
+    types:
+      - completed
+  workflow_dispatch:
+    # Allow manual triggering for testing
+
+jobs:
+  post-failing-checks:
+    # Only run this job if the workflow_run conclusion is 'failure' OR if manually triggered
+    if: ${{ github.event.workflow_run.conclusion == 'failure' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write # To comment on PRs
+      checks: read # To read check run details
+      issues: write # To create comments (issues.createComment)
+      contents: read # To checkout the repository (if needed for other steps)
+      actions: read # To read workflow run jobs and details
+
+    steps:
+      - name: Checkout repository (optional but good practice)
+        # While not strictly needed for this specific script, it's good practice
+        # if you later want to access files from the repository.
+        uses: actions/checkout@v6
+
+      - name: Get PRs and Post Comments
+        uses: actions/github-script@v9
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const run = context.payload.workflow_run;
+            if (!run) {
+              if (context.eventName === 'workflow_dispatch') {
+                core.info('Manual trigger detected. This workflow is designed to run on workflow_run events.');
+                core.info('To test this workflow, you need to trigger it by having a Lint or Tests workflow fail.');
+                return;
+              }
+              core.info('No workflow_run payload. Exiting.');
+              return;
+            }
+
+            // Find associated PR(s) for this run's commit SHA
+            // This works for push-triggered runs and some pull_request_target runs.
+            const { data: associatedPulls } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: run.head_sha,
+            });
+
+            // For pull_request event, the workflow_run.pull_requests array can be more direct
+            let prNumbers = new Set();
+            if (run.pull_requests && run.pull_requests.length > 0) {
+              run.pull_requests.forEach(pr => prNumbers.add(pr.number));
+            } else {
+              // Fallback to commit association if pull_requests array is empty or not present
+              associatedPulls.forEach(p => prNumbers.add(p.number));
+            }
+
+            if (prNumbers.size === 0) {
+              core.info('No PRs associated with this commit or workflow run. Nothing to comment.');
+              return;
+            }
+
+            core.info(`Found PR(s): ${Array.from(prNumbers).join(', ')}`);
+
+            // Call the API to fetch jobs for the run and build the message
+            const { data: jobsData } = await github.rest.actions.listJobsForWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: run.id,
+            });
+
+            const failingJobs = jobsData.jobs.filter(j => j.conclusion === 'failure');
+            let body = `## ⚠️ Workflow Run Failed: [${run.name}](${run.html_url})\n\n`;
+            body += `A CI check has failed in the workflow **${run.name}**. Please review the details below:\n\n`;
+
+            for (const job of failingJobs) {
+              body += `### ❌ Job: [${job.name}](${job.html_url})\n`;
+              body += `- **Status**: ${job.conclusion === 'failure' ? 'Failed' : job.conclusion}\n`;
+              body += `  - [View Job Logs](${job.html_url})\n`;
+
+              if (job.steps && job.steps.length > 0) {
+                const failedSteps = job.steps.filter(s => s.conclusion === 'failure');
+                if (failedSteps.length > 0) {
+                  body += `  - **Failing Steps:**\n`;
+                  for (const s of failedSteps) {
+                    body += `    - Step: \`${s.name}\` — Status: **${s.conclusion}**\n`;
+                    // Use job.html_url with step number for more precise link if available
+                    if (s.number) {
+                      body += `      - [Details in log](${job.html_url}#step:${s.number}:1)\n`;
+                    }
+                  }
+                } else {
+                  body += `  - No specific failing steps found, check job logs for details.\n`;
+                }
+              } else {
+                body += `  - No step information available for this job, check job logs.\n`;
+              }
+              body += '\n';
+            }
+            body += `---\n_This comment was automatically posted by GitHub Actions._`;
+
+            // Post comments to all associated PRs
+            for (const prNumber of prNumbers) {
+              core.info(`Posting comment to PR #${prNumber}`);
+              try {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: prNumber,
+                  body,
+                });
+              } catch (error) {
+                core.warning(`Failed to post comment to PR #${prNumber}: ${error.message}`);
+              }
+            }
+
+      - name: Done
+        run: echo "Attempted to post failing check summaries to associated PR(s)."

@@ -1,0 +1,133 @@
+name: Deploy Preview
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  setup:
+    if: github.actor != 'dependabot[bot]'
+    name: Setup
+    outputs:
+      branch: ${{ steps.branch_name.outputs.current_branch }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get branch name
+        id: branch_name
+        uses: tj-actions/branch-names@v9
+  deploy_preview:
+    if: github.actor != 'dependabot[bot]'
+    name: Deploy Preview
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Neon Branch
+        id: create_neon_branch
+        uses: neondatabase/create-branch-action@v6
+        with:
+          project_id: ${{ vars.NEON_PROJECT_ID }}
+          branch_name: preview/pr-${{ github.event.number }}-${{ needs.setup.outputs.branch }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+
+      - uses: actions/checkout@v6
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Cache Bun dependencies
+        uses: actions/cache@v5
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('package.json', 'bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      - name: Cache Prisma generated files
+        id: cache-prisma
+        uses: actions/cache@v5
+        with:
+          path: prisma/generated
+          key: ${{ runner.os }}-prisma-${{ hashFiles('prisma/schema.prisma', 'package.json', 'bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-prisma-
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Generate Prisma Client (if cache miss)
+        if: steps.cache-prisma.outputs.cache-hit != 'true'
+        run: bunx prisma generate
+
+      - name: Install Vercel CLI
+        run: bun add -g vercel@latest
+
+      - name: Pull Vercel Environment Information
+        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Run Prisma Migrations
+        env:
+          DATABASE_URL: ${{ steps.create_neon_branch.outputs.db_url }}
+        run: |
+          for attempt in 1 2 3 4 5; do
+            bunx prisma migrate deploy && exit 0
+            echo "Migration attempt ${attempt} failed; retrying in 10s..."
+            sleep 10
+          done
+          exit 1
+
+      - name: Build Project Artifacts
+        env:
+          DATABASE_URL: ${{ steps.create_neon_branch.outputs.db_url }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy Project Artifacts to Vercel
+        id: vercel-deploy
+        run: |
+          DEPLOY_OUTPUT=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }} \
+            --env DATABASE_URL=${{ steps.create_neon_branch.outputs.db_url }})
+          echo "PREVIEW_URL=$DEPLOY_OUTPUT" >> $GITHUB_OUTPUT
+
+      - name: Comment PR with Preview Link
+        # if: github.event.action == 'opened'
+        uses: actions/github-script@v9
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const previewUrl = '${{ steps.vercel-deploy.outputs.PREVIEW_URL }}';
+            const db = `${{ steps.create_neon_branch.outputs.db_url }}`
+            console.log('Preview URL:', previewUrl);
+
+            const message = `
+              🚀 **Preview deployment is ready!**
+
+              **Preview:** ${previewUrl}
+
+              Preview Database URL (paste into \`.env.\`):
+              \`\`\`bash
+              DATABASE_URL="${db}"
+              \`\`\`
+            `;
+
+            console.log('PR Context:', {
+              owner: context.repo.owner,
+              repo: context.repo.name,
+              pull_number: context.payload.pull_request.number
+            });
+
+            try {
+              await github.rest.issues.createComment({
+                ...context.repo,
+                issue_number: context.payload.pull_request.number,
+                body: message
+              });
+            } catch (error) {
+              console.error('Failed to create comment:', {
+                status: error.status,
+                message: error.message,
+                url: error.response?.url
+              });
+              throw error;
+            }

@@ -1,0 +1,8 @@
+#!/bin/sh
+changed(){
+  git diff --name-only HEAD^..HEAD | grep package-lock.json > /dev/null 2>&1
+}
+if changed; then
+  echo 'npm packages change detected. Running npm ci...'
+  npm ci
+fi;

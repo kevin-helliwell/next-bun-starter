@@ -1,0 +1,50 @@
+#test comment to test the workflow
+
+name: Delete Old PR Comments
+
+on:
+  pull_request:
+    types: [synchronize]
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  delete-old-preview-comments:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete old preview comments
+        uses: actions/github-script@v9
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const prNumber = context.payload.pull_request?.number;
+            if (!prNumber) {
+            console.log("No pull request number found — exiting");
+            return;
+            }
+
+            const comments = await github.rest.issues.listComments({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: prNumber,
+            });
+
+            const previewComments = comments.data.filter(c =>
+            c.body.includes("Preview deployment")
+            );
+
+            if (previewComments.length > 1) {
+            for (const old of previewComments.slice(0, -1)) {
+            await github.rest.issues.deleteComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            comment_id: old.id,
+            });
+            }
+            console.log(`Deleted ${previewComments.length - 1} old preview comment(s)`);
+            } else {
+            console.log("No comments to delete");
+            }

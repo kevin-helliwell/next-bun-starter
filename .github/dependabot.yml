@@ -1,0 +1,28 @@
+version: 2
+updates:
+  # Enable version updates for Bun (CI and local use bun)
+  - package-ecosystem: "bun"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "automerge"
+    versioning-strategy: increase
+    reviewers:
+      - "kevin-helliwell"
+    groups:
+      dependencies:
+        patterns:
+          - "*"
+
+  # Enable version updates for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "automerge"
+    reviewers:
+      - "kevin-helliwell"

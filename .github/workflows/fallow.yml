@@ -1,0 +1,53 @@
+name: Fallow
+
+on:
+  pull_request:
+    paths: &fallow-paths
+      - '**/*.ts'
+      - '**/*.tsx'
+      - 'package.json'
+      - 'bun.lock'
+      - '.fallowrc.json'
+      - '.github/workflows/fallow.yml'
+  push:
+    branches: [main]
+    paths: *fallow-paths
+
+jobs:
+  audit:
+    name: Audit changed files
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Cache Bun dependencies
+        uses: actions/cache@v5
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('package.json', 'bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      # Rich PR feedback without GitHub Advanced Security
+      - name: Run Fallow audit
+        uses: fallow-rs/fallow@v2
+        with:
+          command: audit
+          gate: new-only
+          fail-on-issues: true
+          annotations: true # default: inline workflow annotations
+          comment: true # sticky PR summary
+          review-comments: true # inline review comments with suggestions
+          review-guidance: false # set true for collapsed "What to do" blocks
+          diff-filter: added # added | diff_context | file | nofilter
+          max-comments: 50

@@ -1,0 +1,86 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+.github/actions/add-asana-link-to-pr/node_modules
+.github/actions/weekly-report/node_modules
+/node_modules
+/.pnp
+.pnp.js
+
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# local env files
+.env*.local
+.env
+
+# vscode settings
+.vscode
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# testing
+/coverage
+/cypress/videos
+/cypress/screenshots
+cypress.env.json
+
+# Jetbrains
+.idea
+
+# Other
+.eslintcache
+
+
+.devcontainer/
+
+
+# Shell scripts
+config.sh
+generate_config.sh
+
+# Misc
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+cypress/downloads/
+setup.py
+delete_images_script/deleteImagesOutput.txt
+read_neon_images_script/downloads/
+read_neon_images_script/output/
+
+# Sentry Config File
+.env.sentry-build-plugin
+
+# Prisma Script Outputs
+prisma/scripts/data-migration/backfillZipcode.updatedOrgIds.json
+prisma/generated/
+scripts/delete-images/deleteImagesOutput.txt
+app/create_issues.sh
+app/find_untested.py
+app/untested_files.txt
+
+# Agent interaction files for devs
+.claude/
+.fallow/
