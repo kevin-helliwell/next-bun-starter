@@ -17,6 +17,7 @@ Run `bun run format` before every commit. CI runs `bun run check:ci` (Prettier c
 
 Before finishing a code change or opening/updating a PR, also run:
 
+- `bun run lint` — same command as CI (`eslint . --cache`; includes Cypress rules such as `cypress/unsafe-to-chain-command`)
 - `bun run test:unit --run` — same command as CI
 - `bun run vercel-build` — same script as preview/production deploys (`prisma generate` + `next build`)
 

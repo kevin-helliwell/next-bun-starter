@@ -26,7 +26,8 @@ describe('notes CRUD', () => {
 			cy.contains('a', 'Edit').click();
 		});
 		cy.url().should('include', '/edit');
-		cy.get('[data-testid="note-title-input"]').clear().type(updatedTitle);
+		cy.get('[data-testid="note-title-input"]').clear();
+		cy.get('[data-testid="note-title-input"]').type(updatedTitle);
 		cy.get('[data-testid="note-submit-button"]').click();
 		cy.url({ timeout: 15000 }).should('match', /\/notes$/);
 		cy.get('[data-testid="notes-list"]').should('contain', updatedTitle);
