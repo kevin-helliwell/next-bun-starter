@@ -105,7 +105,7 @@ Optional GitHub Actions secrets for **prebuilt** production CI (same values as V
 
 | Secret | Purpose |
 | --- | --- |
-| `DATABASE_URL` | Neon **main** branch — written into `.vercel/.env.production.local` for **build** only; migrations use Vercel Production `DATABASE_URL` via `vercel env run` |
+| `DATABASE_URL` | Neon **main** branch — **must match** Vercel Production `DATABASE_URL`; used for build env and as migration fallback when `vercel env run` has no URL |
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk publishable key — **required at build time** for `vercel deploy --prebuilt` |
 | `CLERK_SECRET_KEY` | Clerk secret — written into build env file when set |
 
@@ -117,7 +117,7 @@ Set these in **Vercel → Project → Settings → Environment Variables → Pro
 
 | Variable | Purpose |
 | --- | --- |
-| `DATABASE_URL` | Production Postgres connection string |
+| `DATABASE_URL` | Production Postgres connection string (Neon **main** branch). **Required:** copy from Neon and set explicitly — marketplace integration alone may not expose this to CI via `vercel env run`. Must match GitHub `DATABASE_URL` secret. |
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk publishable key (`pk_test_…` for dev instance on `*.vercel.app`) |
 | `CLERK_SECRET_KEY` | Clerk secret key |
 | `NEXT_PUBLIC_BASE_URL` | Production URL (e.g. `https://your-app.vercel.app`) |

@@ -116,15 +116,49 @@ jobs:
       - name: Run Prisma Migrations
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
-          # Always migrate via Vercel Production env so CI hits the same database
-          # the deployed app uses at runtime. GitHub DATABASE_URL may differ.
-          for attempt in 1 2 3 4 5; do
+          # Prefer Vercel Production DATABASE_URL (same as runtime). Neon marketplace
+          # integration may inject at runtime only — fall back to GitHub secret when
+          # vercel env run has an empty DATABASE_URL (must match Neon main branch).
+          assert_non_local_db_url() {
+            case "${DATABASE_URL:-}" in
+              '')
+                return 1
+                ;;
+              *localhost*|*127.0.0.1*)
+                echo "::error::DATABASE_URL points at localhost."
+                exit 1
+                ;;
+            esac
+            return 0
+          }
+
+          migrate_via_vercel_env() {
             bunx vercel@latest env run --environment=production --token="$VERCEL_TOKEN" -- \
-              bunx prisma migrate deploy && exit 0
+              sh -c 'test -n "${DATABASE_URL:-}" && bunx prisma migrate deploy'
+          }
+
+          migrate_via_github_secret() {
+            assert_non_local_db_url || return 1
+            echo "Using DATABASE_URL from GitHub Actions secret."
+            bunx prisma migrate deploy
+          }
+
+          for attempt in 1 2 3 4 5; do
+            if migrate_via_vercel_env; then
+              echo "Migrated using Vercel Production DATABASE_URL."
+              exit 0
+            fi
+            if migrate_via_github_secret; then
+              echo "::warning::Vercel env run had no DATABASE_URL; migrated via GitHub secret."
+              echo "::warning::Set DATABASE_URL on Vercel Production to the same Neon main URL."
+              exit 0
+            fi
             echo "Migration attempt ${attempt} failed; retrying in 10s..."
             sleep 10
           done
+          echo "::error::Migration failed. Add DATABASE_URL to Vercel Production (Neon main) and/or GitHub Actions secrets."
           exit 1
       - name: Build Project Artifacts
         env:
