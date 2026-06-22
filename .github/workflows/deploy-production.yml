@@ -116,18 +116,12 @@ jobs:
       - name: Run Prisma Migrations
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
-          migrate() {
-            if [ -n "${DATABASE_URL:-}" ]; then
-              bunx prisma migrate deploy
-            else
-              bunx vercel@latest env run --environment=production --token="$VERCEL_TOKEN" -- \
-                bunx prisma migrate deploy
-            fi
-          }
+          # Always migrate via Vercel Production env so CI hits the same database
+          # the deployed app uses at runtime. GitHub DATABASE_URL may differ.
           for attempt in 1 2 3 4 5; do
-            migrate && exit 0
+            bunx vercel@latest env run --environment=production --token="$VERCEL_TOKEN" -- \
+              bunx prisma migrate deploy && exit 0
             echo "Migration attempt ${attempt} failed; retrying in 10s..."
             sleep 10
           done

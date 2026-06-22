@@ -105,7 +105,7 @@ Optional GitHub Actions secrets for **prebuilt** production CI (same values as V
 
 | Secret | Purpose |
 | --- | --- |
-| `DATABASE_URL` | Neon **main** branch — migrations + `.vercel/.env.production.local` |
+| `DATABASE_URL` | Neon **main** branch — written into `.vercel/.env.production.local` for **build** only; migrations use Vercel Production `DATABASE_URL` via `vercel env run` |
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk publishable key — **required at build time** for `vercel deploy --prebuilt` |
 | `CLERK_SECRET_KEY` | Clerk secret — written into build env file when set |
 
