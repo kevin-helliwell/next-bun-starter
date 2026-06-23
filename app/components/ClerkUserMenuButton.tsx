@@ -1,9 +1,8 @@
 'use client';
 
-import { Show } from '@clerk/nextjs';
+import { Show, useClerk } from '@clerk/nextjs';
 import { useCallback, useRef, useState } from 'react';
 import { ClerkUserMenuDropdown } from './clerk-user-menu-dropdown';
-import { ClerkUserProfileModal } from './clerk-user-profile-modal';
 import { useCloseOnOutsideClick } from './use-close-on-outside-click';
 
 interface ClerkUserMenuButtonProps {
@@ -12,7 +11,7 @@ interface ClerkUserMenuButtonProps {
 }
 
 export default function ClerkUserMenuButton({ userName, userImage }: ClerkUserMenuButtonProps) {
-	const [isModalOpen, setIsModalOpen] = useState(false);
+	const { openUserProfile } = useClerk();
 	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 	const dropdownRef = useRef<HTMLDivElement>(null);
 	const closeDropdown = useCallback(() => setIsDropdownOpen(false), []);
@@ -20,26 +19,22 @@ export default function ClerkUserMenuButton({ userName, userImage }: ClerkUserMe
 	useCloseOnOutsideClick(dropdownRef, closeDropdown);
 
 	const openManageAccount = () => {
-		setIsModalOpen(true);
+		openUserProfile();
 		setIsDropdownOpen(false);
 	};
 
 	return (
-		<>
-			<Show when="signed-in">
-				<div className="relative" ref={dropdownRef}>
-					<ClerkUserMenuDropdown
-						userName={userName}
-						userImage={userImage}
-						isOpen={isDropdownOpen}
-						onToggle={() => setIsDropdownOpen(open => !open)}
-						onClose={closeDropdown}
-						onManageAccount={openManageAccount}
-					/>
-				</div>
-			</Show>
-
-			<ClerkUserProfileModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
-		</>
+		<Show when="signed-in">
+			<div className="relative" ref={dropdownRef}>
+				<ClerkUserMenuDropdown
+					userName={userName}
+					userImage={userImage}
+					isOpen={isDropdownOpen}
+					onToggle={() => setIsDropdownOpen(open => !open)}
+					onClose={closeDropdown}
+					onManageAccount={openManageAccount}
+				/>
+			</div>
+		</Show>
 	);
 }

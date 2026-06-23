@@ -3,6 +3,8 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import ClerkUserMenuButton from './ClerkUserMenuButton';
 import React from 'react';
 
+const openUserProfile = vi.fn();
+
 // Mock next/image
 vi.mock('next/image', () => ({
 	default: ({ alt, src }: { alt: string; src: string }) => {
@@ -18,7 +20,7 @@ vi.mock('@clerk/nextjs', () => ({
 	SignOutButton: ({ children }: { children: React.ReactNode }) => (
 		<div data-testid="sign-out-button">{children}</div>
 	),
-	UserProfile: () => <div data-testid="user-profile">User Profile Content</div>,
+	useClerk: () => ({ openUserProfile }),
 }));
 
 describe('ClerkUserMenuButton', () => {
@@ -26,6 +28,10 @@ describe('ClerkUserMenuButton', () => {
 		userName: 'Test User',
 		userImage: '/test-image.jpg',
 	};
+
+	beforeEach(() => {
+		openUserProfile.mockClear();
+	});
 
 	it('renders within Show when signed in', () => {
 		render(<ClerkUserMenuButton {...mockProps} />);
@@ -65,22 +71,22 @@ describe('ClerkUserMenuButton', () => {
 		);
 	});
 
-	it('opens user profile modal when manage account button is clicked', async () => {
+	it('opens user profile via Clerk when manage account button is clicked', async () => {
 		render(<ClerkUserMenuButton {...mockProps} />);
 		fireEvent.click(screen.getByRole('button')); // Open dropdown
 		fireEvent.click(screen.getByText('Manage your account'));
-		await waitFor(() => screen.getByTestId('user-profile'));
-		expect(screen.getByTestId('user-profile')).toBeInTheDocument();
+		await waitFor(() => expect(openUserProfile).toHaveBeenCalledOnce());
 	});
 
-	it('closes user profile modal when clicking Close', async () => {
+	it('closes dropdown when manage account button is clicked', async () => {
 		render(<ClerkUserMenuButton {...mockProps} />);
 		fireEvent.click(screen.getByRole('button'));
-		fireEvent.click(screen.getByText('Manage your account'));
-		await waitFor(() => screen.getByTestId('user-profile'));
+		await waitFor(() => screen.getByText(`Hi ${mockProps.userName}!`));
 
-		fireEvent.click(screen.getByText('Close'));
-		await waitFor(() => expect(screen.queryByTestId('user-profile')).not.toBeInTheDocument());
+		fireEvent.click(screen.getByText('Manage your account'));
+		await waitFor(() =>
+			expect(screen.queryByText(`Hi ${mockProps.userName}!`)).not.toBeInTheDocument(),
+		);
 	});
 
 	it('closes dropdown when clicking outside', async () => {
