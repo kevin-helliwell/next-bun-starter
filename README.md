@@ -19,14 +19,25 @@ git clone git@github.com:YOUR_ORG/my-app.git
 cd my-app
 ./scripts/init-project.sh   # optional: rename My App / my-app / myapp
 bun install
-cp env.local.example .env.local   # fill in Clerk keys
-cp .env.development .env          # or: bun run env_setup
+python3 scripts/setup_env.py      # or: bun run env_setup:py — copies templates + validates
 bun run pg:start                  # separate terminal
 bun run db:migrate:dev
 bun run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
+
+### Environment files
+
+Three helpers bootstrap your local `.env` / `.env.local`:
+
+| Command | What it does |
+| --- | --- |
+| `python3 scripts/setup_env.py` (`bun run env_setup:py`) | Copies `.env.development` → `.env` and `env.local.example` → `.env.local`, then **validates** that required keys are filled and reports what is still blank. Exits non-zero if anything required is missing. |
+| `bun run env_setup` | Bash equivalent that copies the templates only (no validation). |
+| manual | `cp .env.development .env` and `cp env.local.example .env.local`. |
+
+The Python script never overwrites an existing `.env.local` (your secrets are safe) and skips an existing `.env` unless run with `--force`. Re-run it any time to check which required keys (`DATABASE_URL`, `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `WEBHOOK_SECRET`) are still unset — fill them in following the steps below.
 
 ## Required services
 
