@@ -1,6 +1,6 @@
 # Production deployment troubleshooting history
 
-Chronicle of CI and runtime issues hit while standing up **Production Deployment** (`.github/workflows/deploy-production.yml`) with Neon, Vercel, and Clerk. Commits are on `main` from 2026-06-21 unless noted.
+Chronicle of CI and runtime issues hit while standing up **Production Deployment** (`.github/workflows/deploy-production.yml`) with Neon, Vercel, and Clerk. Commits are on `main` from 2026-06-21 unless noted; entries through 2026-06-23 cover follow-up CI and preview Neon hygiene.
 
 ---
 
@@ -14,7 +14,10 @@ Chronicle of CI and runtime issues hit while standing up **Production Deployment
 | 4 | CI: migrations hit `localhost:5433` | Tracked `.env.development` merged over production vars | [`08f670f`](../commit/08f670f) |
 | 5 | CI: build fails `DATABASE_URL is not set` | `vercel build` ignores GitHub step env; only reads `.vercel/` files | [`f001fdc`](../commit/f001fdc), [`118b067`](../commit/118b067) |
 | 6 | Live: `Missing publishableKey` | `NEXT_PUBLIC_*` baked at **build** time on Actions; Clerk key not in build env | [`cf13acc`](../commit/cf13acc) |
-| 7 | Live: **Failed to create note** | No local `User` row — Clerk webhook not configured for production | _Operational_ (see §8) |
+| 7 | Live: **Failed to create note** | No local `User` row — Clerk webhook not configured for production (or migrations ran on wrong DB — see §9) | _Operational_ (see §8) |
+| 8 | CI: migrations green; live app missing `User`/`Note` tables | `prisma migrate deploy` used GitHub `DATABASE_URL` while Vercel runtime used a different Production URL | [`d8e6c3a`](../commit/d8e6c3a) |
+| 9 | CI: `vercel env run` has empty `DATABASE_URL` for migrations | Neon marketplace injects `DATABASE_URL` at Vercel runtime only; CI `vercel env run` often sees empty value | [`3a9d017`](../commit/3a9d017) |
+| 10 | Orphaned Neon `preview/pr-*` branches accumulate | PR-close delete missed (failed workflow, force-close, idle period) | [`691bb4c`](../commit/691bb4c) |
 
 ---
 
@@ -216,11 +219,89 @@ App loads and sign-in works; creating a note shows **Failed to create note**.
 
 Notes require a row in Postgres `User` linked by `clerk_id`. Users are created via Clerk webhook `POST /api/webhooks/user-create` on `user.created`. If the webhook was never configured for production, or the user signed up before it existed, Clerk auth succeeds but `getLocalUserId()` returns empty → server action catches and shows generic failure.
 
+If migrations ran against a **different** database than Vercel Production (see §9), tables may be missing on the live Neon branch even when CI reported success — same symptom.
+
 **Fix (operational)**
 
 1. Set `WEBHOOK_SECRET` on Vercel Production.
 2. Clerk Dashboard → Webhook → `https://<production-url>/api/webhooks/user-create` with `user.created`, `user.updated`, `user.deleted`.
 3. For existing accounts: sign up again after webhook is live, or backfill `User` in Neon.
+4. Confirm production migrations target the same Neon main branch Vercel uses (§9–§10).
+
+---
+
+## 9. Migrations used GitHub secret, not Vercel Production database
+
+**Workflow:** Production Deployment  
+**Commit:** `d8e6c3a` — fix(ci): migrate production DB via Vercel env, not GitHub secret
+
+**Symptom**
+
+Deploy succeeded and migrations logged success, but the live app behaved as if schema were missing — e.g. errors creating notes, missing `User` / `Note` tables on the database Vercel actually connected to.
+
+**Cause**
+
+The workflow ran `prisma migrate deploy` with `secrets.DATABASE_URL` from GitHub Actions while the deployed app read `DATABASE_URL` from **Vercel Production** (Neon integration). If those values pointed at different databases (or the GitHub secret was stale/wrong), CI could migrate database A while production served database B.
+
+**Fix**
+
+Run migrations inside `vercel env run --environment=production` so CI uses the same Production `DATABASE_URL` as runtime. Reserve the GitHub `DATABASE_URL` secret primarily for patching `.vercel/.env.production.local` at **build** time (§5).
+
+**Lesson**
+
+Green migration logs are meaningless unless the connection string matches what the deployed app uses.
+
+---
+
+## 10. `vercel env run` returns empty `DATABASE_URL` for Neon marketplace
+
+**Workflow:** Production Deployment  
+**Commit:** `3a9d017` — fix(ci): fall back to GitHub DATABASE_URL when vercel env run is empty
+
+**Symptom**
+
+After §9, migrations failed or could not run because `vercel env run` injected an empty `DATABASE_URL` even though Neon showed a connection string on the Vercel dashboard.
+
+**Cause**
+
+Neon/Vercel marketplace integrations often inject `DATABASE_URL` at **Vercel runtime** on `*.vercel.app`, but that injection is not always visible to `vercel env run` in external CI — same Sensitive/empty pattern as §3.
+
+**Fix**
+
+Migration step now:
+
+1. **Prefer** `vercel env run --environment=production` → `prisma migrate deploy` (same URL as runtime when available).
+2. **Fall back** to GitHub `DATABASE_URL` secret with workflow warnings when Vercel injection is empty.
+3. Reject localhost URLs in both paths.
+
+Both sources **must** be the same Neon **main** branch URL. README documents that GitHub `DATABASE_URL` is required for build env patching and serves as migration fallback.
+
+---
+
+## 11. Orphaned Neon preview branches (weekly cleanup)
+
+**Workflow:** Preview / Neon hygiene (not production deploy)  
+**Commit:** `691bb4c` — ci(neon): add weekly workflow to prune orphaned preview branches
+
+**Symptom**
+
+Neon console shows many `preview/pr-<N>-<branch>` branches after closed or abandoned PRs; storage/compute cost creeps up.
+
+**Cause**
+
+`delete-neon-branch.yml` deletes on PR **close**, but branches can survive when that workflow fails, a PR is force-closed without the event firing cleanly, or cleanup never ran during idle periods.
+
+**Fix**
+
+Add `cleanup-neon-branches.yml`:
+
+- **Schedule:** Mondays 03:00 UTC
+- **Manual:** `workflow_dispatch` with `dry_run` to list candidates without deleting
+- Lists open PR numbers via `gh pr list`
+- Deletes `preview/pr-<N>-*` branches only when PR `#N` is not open
+- Never touches primary, default, or protected branches
+
+Requires existing `NEON_PROJECT_ID` (var), `NEON_API_KEY` (secret), and `pull-requests: read`.
 
 ---
 
@@ -230,7 +311,8 @@ Notes require a row in Postgres `User` linked by `clerk_id`. Users are created v
 ┌─────────────────────────────────────────────────────────────┐
 │ GitHub Actions secrets                                      │
 │ DATABASE_URL, NEXT_PUBLIC_CLERK_*, VERCEL_*                 │
-│ → CI migrate + vercel build (prebuilt)                      │
+│ → CI migrate (fallback) + vercel build (prebuilt)           │
+│ → Migrations prefer vercel env run; GH secret if empty (§10)│
 └─────────────────────────────────────────────────────────────┘
                               │
                               ▼
@@ -263,6 +345,9 @@ Notes require a row in Postgres `User` linked by `clerk_id`. Users are created v
 | 2026-06-21 | `118b067` | Write GH `DATABASE_URL` into `.vercel/.env.production.local` |
 | 2026-06-21 | `78ad07e` | Empty commit to retrigger deploy |
 | 2026-06-21 | `cf13acc` | Clerk keys for prebuilt build; always `vercel env run` for build |
+| 2026-06-21 | `d8e6c3a` | Migrations via Vercel Production env, not GitHub secret alone |
+| 2026-06-21 | `3a9d017` | Migration fallback to GitHub `DATABASE_URL` when Vercel env empty |
+| 2026-06-23 | `691bb4c` | Weekly `cleanup-neon-branches.yml` for orphaned preview branches |
 
 ---
 
