@@ -1,0 +1,87 @@
+name: Cleanup Neon Branches
+
+# Weekly safety net: deletes orphaned preview Neon branches whose PR is no
+# longer open. The on-PR-close workflow (delete-neon-branch.yml) is the fast
+# path; this catches branches it missed (failed runs, force-closed PRs, etc.)
+# so storage/compute cost doesn't creep back up.
+
+on:
+  schedule:
+    - cron: "0 3 * * 1" # Mondays 03:00 UTC
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "List branches that would be deleted without deleting them"
+        type: boolean
+        default: false
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+permissions:
+  pull-requests: read
+
+jobs:
+  cleanup:
+    name: Delete orphaned preview branches
+    runs-on: ubuntu-latest
+    env:
+      NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+      NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      DRY_RUN: ${{ inputs.dry_run }}
+    steps:
+      - name: Delete orphaned preview branches
+        run: |
+          set -euo pipefail
+          api="https://console.neon.tech/api/v2/projects/${NEON_PROJECT_ID}/branches"
+
+          # Open PR numbers (whitespace-separated) for this repo.
+          open_prs="$(gh pr list --repo "${GITHUB_REPOSITORY}" --state open --limit 1000 --json number --jq '.[].number' | tr '\n' ' ')"
+          echo "Open PRs: ${open_prs:-(none)}"
+
+          # All branches as id<TAB>name<TAB>primary<TAB>default<TAB>protected
+          branches="$(curl -fsS -H "Authorization: Bearer ${NEON_API_KEY}" "$api" \
+            | jq -r '.branches[] | [.id, .name, (.primary // false), (.default // false), (.protected // false)] | @tsv')"
+
+          deleted=0; kept=0; failed=0
+          while IFS=$'\t' read -r id name primary default protected; do
+            [ -z "${id:-}" ] && continue
+
+            # Never touch primary/default/protected branches.
+            if [ "$primary" = "true" ] || [ "$default" = "true" ] || [ "$protected" = "true" ]; then
+              echo "KEEP (primary/default/protected): $name"
+              kept=$((kept+1)); continue
+            fi
+
+            # Only manage preview branches (preview/pr-<N>-... naming).
+            pr="$(printf '%s' "$name" | sed -n 's#^preview/pr-\([0-9]\+\)-.*#\1#p')"
+            if [ -z "$pr" ]; then
+              echo "KEEP (not a preview/pr branch): $name"
+              kept=$((kept+1)); continue
+            fi
+
+            # Keep if its PR is still open.
+            if printf ' %s ' "$open_prs" | grep -q " $pr "; then
+              echo "KEEP (open PR #$pr): $name"
+              kept=$((kept+1)); continue
+            fi
+
+            if [ "${DRY_RUN:-false}" = "true" ]; then
+              echo "WOULD DELETE (PR #$pr closed): $name [$id]"
+              deleted=$((deleted+1)); continue
+            fi
+
+            echo "DELETE (PR #$pr closed): $name [$id]"
+            if curl -fsS -X DELETE -H "Authorization: Bearer ${NEON_API_KEY}" "${api}/${id}" >/dev/null; then
+              deleted=$((deleted+1))
+            else
+              echo "  !! failed to delete $id"
+              failed=$((failed+1))
+            fi
+          done <<< "$branches"
+
+          echo "----"
+          echo "Deleted (or would delete): $deleted | Kept: $kept | Failed: $failed"
+          [ "$failed" -eq 0 ]

@@ -136,7 +136,7 @@ vercel env run --environment=production -- bunx prisma migrate deploy
 
 Secrets: `NEON_PROJECT_ID`, `NEON_API_KEY`
 
-Workflows: `deploy-preview.yml`, `delete-neon-branch.yml`
+Workflows: `deploy-preview.yml`, `delete-neon-branch.yml`, `cleanup-neon-branches.yml` (weekly orphan cleanup)
 
 ### Sentry
 
