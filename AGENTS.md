@@ -11,6 +11,16 @@ Apply **YAGNI** (You Aren't Gonna Need It): build only what the current task req
 - Skip optional parameters, hooks, and helpers that aren't used yet.
 - Add tests when they cover real behavior or are requested — not for hypothetical cases.
 
+## Agent workflow
+
+- Align on the change before large implementation; ask when requirements or module boundaries are unclear.
+- Work in small verified steps — run relevant tests/typecheck as you go; feedback rate is the speed limit.
+- Prefer deep modules: related logic behind a simple interface; test at the boundary.
+- Use existing domain terms (note, server action, Clerk user, etc.) — match surrounding code naming.
+- Read and understand code you change; do not treat generated code as disposable.
+
+See [AI coding fundamentals](./docs/ai-coding-software-fundamentals.md) for rationale.
+
 ## Checks before commits
 
 Run `bun run format` before every commit. CI runs `bun run check:ci` (Prettier check) and will fail on unformatted files.
