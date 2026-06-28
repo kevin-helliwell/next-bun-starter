@@ -37,7 +37,7 @@ jobs:
         uses: oven-sh/setup-bun@v2
 
       - name: Cache Bun dependencies
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ~/.bun/install/cache
           key: ${{ runner.os }}-bun-${{ hashFiles('package.json', 'bun.lock') }}
@@ -46,7 +46,7 @@ jobs:
 
       - name: Cache Prisma generated files
         id: cache-prisma
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: prisma/generated
           key: ${{ runner.os }}-prisma-${{ hashFiles('prisma/schema.prisma', 'package.json', 'bun.lock') }}
